@@ -1,0 +1,4 @@
+*CLAUDE.md
+*.DS_Store
+.venv
+*.pyc

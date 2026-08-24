@@ -1,0 +1,19 @@
+[project]
+name = "NLP2026"
+version = "0.1.0"
+description = "Aarhus University, Natural Language Processing, 2026"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "empath>=0.89",
+    "gensim>=4.4.0",
+    "jupyterlab>=4",
+    "matplotlib>=3.11.1",
+    "nltk>=3.10.3",
+    "numpy>=2.5.2",
+    "pyldavis>=3.4.1",
+    "scikit-learn>=1.9.0",
+    "spacy>=3.8.16",
+    "torch>=2.13.0",
+    "vadersentiment>=3.3.2",
+]
