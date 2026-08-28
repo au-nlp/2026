@@ -6,3 +6,4 @@
 - [git - the simple guide](https://rogerdudler.github.io/git-guide/)
 - [uv Documentation](https://docs.astral.sh/uv/)
 - [Markdown Basic Syntax](https://www.markdownguide.org/basic-syntax/)
+- Exercises on [Python](https://www.w3schools.com/python/python_exercises.asp), [NumPY](https://www.w3schools.com/python/numpy/numpy_exercises.asp) and [PyTorch](https://www.learnpytorch.io/)
