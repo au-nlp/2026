@@ -1,34 +1,42 @@
 # 03 - Language Modeling
 
-This tutorial moves from counting words to representing them. First you learn dense word representations — training your own Word2Vec embeddings and reusing pre-trained GloVe vectors to build a sentiment classifier — and then you implement a classic bigram language model and score it with perplexity.
+This tutorial is about turning words into numbers and then measuring how well a model predicts language. You train your own **Word2Vec** embeddings, explore **pre-trained GloVe** vectors, use them as features for a sentiment classifier, and then build a **bigram language model** by hand to compute **perplexity**.
 
 ## Notebooks
-- `0. Word Embeddings.ipynb` — train Word2Vec on the Brown Corpus, then use GloVe embeddings as features for a tweet sentiment classifier. Fill in every `# TODO` and the `...` placeholders.
-- `1. Perplexity.ipynb` — build a bigram model with add-1 smoothing on a toy corpus and compute the perplexity of a test sentence by hand.
+- `0. Word Embeddings.ipynb` — the first exercise notebook. Work through it in order and fill in every `# TODO`.
+- `0. Word Embeddings - Solutions.ipynb` — the worked solutions. Try to finish a part before looking at them.
+- `1. Perplexity.ipynb` — the second exercise notebook.
+- `1. Perplexity - Solution.ipynb` — its worked solutions.
 
 ## What you will practice
-1. **Corpus preprocessing** — tokenizing, lowercasing, deaccenting and removing stopwords with NLTK and gensim
-2. **Word2Vec** — training skip-gram embeddings yourself, inspecting a word vector and its nearest neighbours
-3. **Pre-trained embeddings** — loading GloVe and turning a sentence into a fixed-length vector by averaging its word vectors
-4. **A sentiment classifier** — an MLP in PyTorch over sentence embeddings, with the training loop, BCE loss and test-set evaluation from week 2
-5. **N-gram language models** — unigram and bigram counts with `<s>` / `</s>` boundary tokens
-6. **Add-1 (Laplace) smoothing** — why unseen bigrams need it, and the smoothed probability formula
-7. **Perplexity** — the log-probability formulation and what a lower value actually tells you
-8. **MCQs** — to check your understanding
+
+**Word Embeddings**
+1. **Training Word2Vec** — preprocessing a corpus and training skip-gram embeddings on the Brown corpus
+2. **Cosine similarity** — implementing it yourself and checking it against gensim
+3. **Pre-trained GloVe** — nearest neighbours, analogies (`king - man + woman`), odd-one-out, and the biases these vectors pick up
+4. **A downstream task** — averaging word vectors into sentence features and training a sentiment classifier on 50k tweets
+5. **The limits of averaging** — why this representation cannot tell *"good, not bad"* from *"bad, not good"*
+6. **MCQs** — to check your understanding
+
+**Perplexity**
+1. **Counting** — unigrams and bigrams, with sentence-boundary tokens
+2. **Estimating probabilities** — the maximum-likelihood estimate and why it breaks
+3. **Add-1 smoothing** — and verifying that the result is still a probability distribution
+4. **Perplexity** — computing it, wrapping it in a function, and comparing sentences with it
+5. **MCQs** — to check your understanding
+
+Most implementation tasks are followed by a **✅ Check** cell that verifies your code automatically, so you can confirm each part before moving on.
 
 ## Before you start
-Both notebooks run on CPU; no GPU is required.
+Both notebooks need the updated project environment (`uv sync`), which now includes `datasets` and `tqdm`.
 
-The notebooks need `gensim`, `nltk`, `torch` (all part of the project environment, `uv sync`) plus `datasets` and `torchmetrics` for the sentiment classifier:
+Two cells in `0. Word Embeddings.ipynb` download data, so make sure you have a working internet connection and start them early:
+- the **Brown corpus** and NLTK stopwords (~3 MB),
+- the **GloVe vectors** `glove-wiki-gigaword-100` (~130 MB, cached after the first run).
 
-```bash
-uv add datasets torchmetrics
-```
+The Sentiment140 tweets are downloaded automatically as well. A GPU is not required — but training the classifier for 30 epochs takes around 10 minutes on a CPU.
 
-Several downloads happen the first time you run the notebooks, so make sure you have a working internet connection and some patience:
-- the NLTK `brown` corpus and `stopwords` list (small),
-- the `glove-wiki-gigaword-100` vectors (~130 MB),
-- the Sentiment140 Twitter dataset from the Hugging Face Hub.
+`1. Perplexity.ipynb` needs no downloads and runs in a second.
 
 Please give us feedback for this tutorial!
 
