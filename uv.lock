@@ -2052,7 +2052,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "datasets", specifier = ">=5.0.1" },
+    { name = "datasets", specifier = ">=4.0.0" },
     { name = "empath", specifier = ">=0.89" },
     { name = "gensim", specifier = ">=4.4.0" },
     { name = "jupyterlab", specifier = ">=4" },
@@ -2064,7 +2064,7 @@ requires-dist = [
     { name = "spacy", specifier = ">=3.8.16" },
     { name = "torch", specifier = ">=2.13.0" },
     { name = "torchvision", specifier = ">=0.28.0" },
-    { name = "tqdm", specifier = ">=4.70.0" },
+    { name = "tqdm", specifier = ">=4.67.0" },
     { name = "vadersentiment", specifier = ">=3.3.2" },
 ]
 
