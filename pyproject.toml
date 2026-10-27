@@ -26,4 +26,5 @@ dependencies = [
     "trl>=1.14.1",
     "peft>=0.21.2",
     "groq>=1.7.0",
+    "rouge-score>=0.1.2",
 ]
