@@ -79,16 +79,16 @@ There is **no clear, unifying theory yet**. Generally, terms that are **more fre
 
 ## 7. Making ICL more effective: prompt engineering
 
-**Prompt engineering** means choosing how you phrase the task. For Yelp reviews (predict a 1–5 star rating for review text $a$):
+**Prompt engineering** means choosing how you phrase the task. For Yelp reviews (predict a 1–5 star rating for review text $`a`$):
 
-- **Patterns** express the task, e.g. $P_1(a) =$ "It was \_\_\_. $a$", $P_3(a) =$ "$a$. All in all, it was \_\_\_.", $P_4(a) =$ "$a$ ‖ In summary, the restaurant is \_\_\_."
-- A **verbalizer** maps labels to words: $v(1)=$ terrible, $v(2)=$ bad, $v(3)=$ okay, $v(4)=$ good, $v(5)=$ great.
+- **Patterns** express the task, e.g. $`P_1(a) =`$ "It was \_\_\_. $`a`$", $`P_3(a) =`$ "$`a`$. All in all, it was \_\_\_.", $`P_4(a) =`$ "$`a`$ ‖ In summary, the restaurant is \_\_\_."
+- A **verbalizer** maps labels to words: $`v(1)=`$ terrible, $`v(2)=`$ bad, $`v(3)=`$ okay, $`v(4)=`$ good, $`v(5)=`$ great.
 
 You select the patterns and verbalizers that make the model best at the task. Good prompts can sometimes improve performance even at small scale.
 
 ### What makes the best prompt?
 
-**AutoPrompt** searches for the best prompt automatically. It uses **gradient-guided search**: initialise a set of trigger tokens $[T]$ in a template like `{sentence}[T][T][T][P]`, then estimate how the loss would change if each trigger token were replaced by another vocabulary token, and swap in the best ones.
+**AutoPrompt** searches for the best prompt automatically. It uses **gradient-guided search**: initialise a set of trigger tokens $`[T]`$ in a template like `{sentence}[T][T][T][P]`, then estimate how the loss would change if each trigger token were replaced by another vocabulary token, and swap in the best ones.
 
 The prompts it finds are often **sequences of random-looking words** (e.g. "a real joy. atmosphere alot dialogue Clone totally [MASK]"). Such odd token strings are the foundation of **"jailbreaking"**.
 
@@ -163,9 +163,11 @@ Humans write a **demonstration** of the task requested by each instruction. Abou
 
 ### Step 1: Supervised fine-tuning (SFT)
 
-Train the model to generate the next word $y_t^{\ast}$ of the demonstration given the earlier demonstration words and the instruction $x^{\ast}$:
+Train the model to generate the next word $`y_t^{\ast}`$ of the demonstration given the earlier demonstration words and the instruction $`x^{\ast}`$:
 
-$$\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^{\ast} \mid \{y^{\ast}\}_{<t};\ \{x^{\ast}\}\right)$$
+```math
+\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^{\ast} \mid \{y^{\ast}\}_{<t};\ \{x^{\ast}\}\right)
+```
 
 **Shortcomings of only using SFT:**
 - **Expensive** to collect lots of demonstration data.
@@ -173,11 +175,13 @@ $$\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^{\ast} \mid \{y^{\ast}\}_{<t};\ 
 
 ### Step 2: Train a reward model
 
-We cannot get human judgments for every output, so we train a **reward model** to predict a quality score for any demonstration given the instruction. Humans rank several model outputs. For a pair where $Y_+$ is better than $Y_-$:
+We cannot get human judgments for every output, so we train a **reward model** to predict a quality score for any demonstration given the instruction. Humans rank several model outputs. For a pair where $`Y_+`$ is better than $`Y_-`$:
 
-$$\mathcal{L}_{RM} = -\log \sigma\big(R(Y_+) - R(Y_-)\big)$$
+```math
+\mathcal{L}_{RM} = -\log \sigma\big(R(Y_+) - R(Y_-)\big)
+```
 
-As $R(Y_+) - R(Y_-) \to \infty$, $\sigma(\cdot) \to 1$ and the loss $\to 0$. So the model learns to score good demonstrations higher. Now any demonstration $Y$ gets a score $R(Y)$.
+As $`R(Y_+) - R(Y_-) \to \infty`$, $`\sigma(\cdot) \to 1`$ and the loss $`\to 0`$. So the model learns to score good demonstrations higher. Now any demonstration $`Y`$ gets a score $`R(Y)`$.
 
 ### Step 3: Optimise with RL
 
@@ -188,28 +192,38 @@ Loop: sample a response to a query, score it with the reward model, update the L
 </p>
 <p align="center"><em>The KL term between the active and frozen reference model keeps the policy from drifting too far while it chases reward.</em></p>
 
-**REINFORCE.** Given an instruction, sample a demonstration $\hat{Y}$ from the model and minimise
+**REINFORCE.** Given an instruction, sample a demonstration $`\hat{Y}`$ from the model and minimise
 
-$$\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)$$
+```math
+\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)
+```
 
 Read it as: next time, increase the probability of this sampled token in this context, and do it more if the reward is high.
 
 **Implementation tricks:**
 - **Start from the SFT model.**
-- **Subtract a baseline** $b$:
-$$\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)$$
-  Why? If $R(\hat{Y}) > 0$ always, every sampled generation has its probability pushed up, so you **never penalise a generation**. With a baseline, below-average outputs get a negative weight and are pushed down.
-- **Keep encouraging coherence** by mixing in the MLE loss: $\mathcal{L} = \mathcal{L}_{MLE} + \alpha\,\mathcal{L}_{RL}$.
+- **Subtract a baseline** $`b`$:
+
+```math
+\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)
+```
+
+  Why? If $`R(\hat{Y}) > 0`$ always, every sampled generation has its probability pushed up, so you **never penalise a generation**. With a baseline, below-average outputs get a negative weight and are pushed down.
+- **Keep encouraging coherence** by mixing in the MLE loss: $`\mathcal{L} = \mathcal{L}_{MLE} + \alpha\,\mathcal{L}_{RL}`$.
 
 **PPO.** Instead of raw log-probabilities, PPO uses the log-ratio between the current policy and the base policy, and takes a minimum with a clipped term:
 
-$$\mathcal{L}_{PPO} = -\min\left( R(\hat{Y}) \sum_{t=1}^{T} \log \frac{P_{curr}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})}{P_{base}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})},\ g(\epsilon, R(\hat{Y})) \right)$$
+```math
+\mathcal{L}_{PPO} = -\min\left( R(\hat{Y}) \sum_{t=1}^{T} \log \frac{P_{curr}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})}{P_{base}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})},\ g(\epsilon, R(\hat{Y})) \right)
+```
 
-$$g(\epsilon, R(\hat{Y})) = \begin{cases} (1+\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) \ge 0 \\ (1-\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) < 0 \end{cases}$$
+```math
+g(\epsilon, R(\hat{Y})) = \begin{cases} (1+\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) \ge 0 \\ (1-\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) < 0 \end{cases}
+```
 
 How it differs from REINFORCE:
-- The ratio term takes **extreme values when $P_{curr}$ and $P_{base}$ deviate**.
-- The **min** limits how far the policy can move from the base policy in each step. For example, if the reward is positive, the objective is capped at $(1+\epsilon)R(\hat{Y})$.
+- The ratio term takes **extreme values when $`P_{curr}`$ and $`P_{base}`$ deviate**.
+- The **min** limits how far the policy can move from the base policy in each step. For example, if the reward is positive, the objective is capped at $`(1+\epsilon)R(\hat{Y})`$.
 
 ### Outcomes
 
@@ -221,9 +235,11 @@ How it differs from REINFORCE:
 
 In RLHF a reward model learns human preferences, then RL optimises the LM against it. **DPO** skips the reward model and the RL loop: it optimises for human preferences **directly** from preference data with a maximum-likelihood-style loss:
 
-$$\mathcal{L}_{DPO} = -\log \sigma\left( \beta \log \frac{P_{curr}(Y_+ \mid x^{\ast})}{P_{base}(Y_+ \mid x^{\ast})} - \beta \log \frac{P_{curr}(Y_- \mid x^{\ast})}{P_{base}(Y_- \mid x^{\ast})} \right)$$
+```math
+\mathcal{L}_{DPO} = -\log \sigma\left( \beta \log \frac{P_{curr}(Y_+ \mid x^{\ast})}{P_{base}(Y_+ \mid x^{\ast})} - \beta \log \frac{P_{curr}(Y_- \mid x^{\ast})}{P_{base}(Y_- \mid x^{\ast})} \right)
+```
 
-The objective pushes the ratio $P_{curr}/P_{base}$ to be higher for the preferred sample $Y_+$ than for $Y_-$. Compare it with $\mathcal{L}_{RM}$: the scaled log-ratio plays the role of the reward. DPO is **less flexible than RLHF in theory, but works well in practice**.
+The objective pushes the ratio $`P_{curr}/P_{base}`$ to be higher for the preferred sample $`Y_+`$ than for $`Y_-`$. Compare it with $`\mathcal{L}_{RM}`$: the scaled log-ratio plays the role of the reward. DPO is **less flexible than RLHF in theory, but works well in practice**.
 
 <p align="center">
   <img src="images/lecture-07/rlhf-vs-dpo.png" alt="RLHF pipeline going from preference data to a reward model and then an RL loop with the LM policy, versus DPO going from preference data straight to the final LM by maximum likelihood" width="700">
@@ -238,7 +254,7 @@ The objective pushes the ratio $P_{curr}/P_{base}$ to be higher for the preferre
 - ICL is sensitive to which examples you pick and their order.
 - Prompt engineering (patterns, verbalizers, AutoPrompt) and prompt tuning (learned soft prompts, frozen model) make adaptation cheap; prompt tuning matches fine-tuning at large scale.
 - Chain-of-thought prompting shows reasoning steps in the examples and helps on multi-step problems, again only at scale.
-- ChatGPT-style models come from SFT → reward model ($-\log\sigma(R(Y_+)-R(Y_-))$) → RL (REINFORCE/PPO).
+- ChatGPT-style models come from SFT → reward model ($`-\log\sigma(R(Y_+)-R(Y_-))`$) → RL (REINFORCE/PPO).
 - A baseline in REINFORCE lets bad outputs be penalised; PPO limits how far the policy moves from the base each step.
 - DPO optimises preferences directly without a reward model or RL loop.
 
@@ -264,13 +280,13 @@ Demonstration data is expensive to collect, and SFT suffers from exposure bias: 
 <details>
 <summary>Why do we subtract a baseline b in REINFORCE?</summary>
 
-If $R(\hat{Y}) > 0$ for every sample, every generation's probability is increased, so no generation is ever penalised. Subtracting $b$ makes below-baseline outputs get a negative weight, so they become less likely.
+If $`R(\hat{Y}) > 0`$ for every sample, every generation's probability is increased, so no generation is ever penalised. Subtracting $`b`$ makes below-baseline outputs get a negative weight, so they become less likely.
 </details>
 
 <details>
 <summary>How does DPO differ from RLHF?</summary>
 
-RLHF trains a separate reward model and then optimises the LM with RL. DPO optimises the LM directly on preference pairs, increasing $P_{curr}/P_{base}$ for $Y_+$ relative to $Y_-$. It is less flexible in theory but works well in practice.
+RLHF trains a separate reward model and then optimises the LM with RL. DPO optimises the LM directly on preference pairs, increasing $`P_{curr}/P_{base}`$ for $`Y_+`$ relative to $`Y_-`$. It is less flexible in theory but works well in practice.
 </details>
 
 ---

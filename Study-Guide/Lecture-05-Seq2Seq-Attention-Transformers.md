@@ -18,17 +18,21 @@ Vanishing gradients happen because the gradient is multiplied many times on its 
 
 **Skip connections in RNNs.** Let the state also depend directly on a state several steps back (here 5 steps):
 
-$$h_t = \sigma(W_1 h_{t-1} + W_5 h_{t-5} + W_x x_t)$$
+```math
+h_t = \sigma(W_1 h_{t-1} + W_5 h_{t-5} + W_x x_t)
+```
 
 - Backprop uses both routes. The total gradient is the gradient through the chain plus the gradient through the skip.
 - The skip route has fewer multiplications, so the gradient shrinks less. This helps with longer dependencies.
-- The shortcut still has its own learned weight $W_5$.
+- The shortcut still has its own learned weight $`W_5`$.
 
-**Residual blocks.** Add an *identity* path around a function $\mathcal{F}$:
+**Residual blocks.** Add an *identity* path around a function $`\mathcal{F}`$:
 
-$$x_{l+1} = x_l + \mathcal{F}(x_l) \qquad \frac{\partial x_{l+1}}{\partial x_l} = I + \frac{\partial \mathcal{F}(x_l)}{\partial x_l}$$
+```math
+x_{l+1} = x_l + \mathcal{F}(x_l) \qquad \frac{\partial x_{l+1}}{\partial x_l} = I + \frac{\partial \mathcal{F}(x_l)}{\partial x_l}
+```
 
-The identity term $I$ lets gradients flow straight through. It is not weighted, so it is stronger than a generic skip. Residual connections create a **gradient highway through depth**, which makes deep networks much easier to train.
+The identity term $`I`$ lets gradients flow straight through. It is not weighted, so it is stronger than a generic skip. Residual connections create a **gradient highway through depth**, which makes deep networks much easier to train.
 
 <p align="center">
   <img src="images/lecture-05/residual-block-identity-shortcut.png" alt="Residual block diagram: input x_l goes through F(x_l) and also around it via an identity shortcut, the two are added to give x_{l+1}; compared with a weighted skip W_skip from h_{t-5} to h_t" width="700">
@@ -39,11 +43,11 @@ The identity term $I$ lets gradients flow straight through. It is not weighted, 
 
 | Model | Update | Direct carry coefficient |
 |---|---|---|
-| Pure residual RNN | $h_t = h_{t-1} + F(h_{t-1}, x_t)$ | 1 (exact identity shortcut) |
-| LSTM | $c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t$ | $f_t$ (gated) |
-| GRU | $h_t = (1-z_t)\odot h_{t-1} + z_t \odot \text{func}(x_t, h_{t-1})$ | $1 - z_t$ (gated) |
+| Pure residual RNN | $`h_t = h_{t-1} + F(h_{t-1}, x_t)`$ | 1 (exact identity shortcut) |
+| LSTM | $`c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t`$ | $`f_t`$ (gated) |
+| GRU | $`h_t = (1-z_t)\odot h_{t-1} + z_t \odot \text{func}(x_t, h_{t-1})`$ | $`1 - z_t`$ (gated) |
 
-If the LSTM forget gate $f_t \approx 1$ (or the GRU's $z_t \approx 0$), the old state is carried almost unchanged. The cell then behaves like a residual/skip connection through time. The difference is that the carry is learned, not fixed at 1, and gradients can also flow through the gate and candidate computations. In short: **LSTM/GRU = residual idea + learned gates**.
+If the LSTM forget gate $`f_t \approx 1`$ (or the GRU's $`z_t \approx 0`$), the old state is carried almost unchanged. The cell then behaves like a residual/skip connection through time. The difference is that the carry is learned, not fixed at 1, and gradients can also flow through the gate and candidate computations. In short: **LSTM/GRU = residual idea + learned gates**.
 
 ## 2. Encoder-decoder (seq2seq) models
 
@@ -64,20 +68,24 @@ Other applications:
 - Summarization, style change/transfer, and many more.
 
 ### Bidirectional encoders
-The encoder can read the input in both directions. Its representation combines a forward state $h_n^{fwd}$ and a backward state $h_n^{bwd}$. This is fine because the whole input is available up front.
+The encoder can read the input in both directions. Its representation combines a forward state $`h_n^{fwd}`$ and a backward state $`h_n^{bwd}`$. This is fine because the whole input is available up front.
 
 The **decoder must be unidirectional**. It is autoregressive and cannot know the future words it has not generated yet.
 
 **Does the decoder have to be twice the dimensionality of the encoder?** No. Project the concatenated encoder states down first:
 
-$$h_0^{dec} = W_{dec}[h_n^{fwd}; h_n^{bwd}] + b_{dec}$$
+```math
+h_0^{dec} = W_{dec}[h_n^{fwd}; h_n^{bwd}] + b_{dec}
+```
 
 ### Training
 Training is similar to a language model. Minimize the average cross-entropy over all output tokens, conditioned on the whole input:
 
-$$\mathcal{L} = \sum_{t=1}^{T} -\log P(y_t \mid y_1, \ldots, y_{t-1}, x_1, \ldots, x_n)$$
+```math
+\mathcal{L} = \sum_{t=1}^{T} -\log P(y_t \mid y_1, \ldots, y_{t-1}, x_1, \ldots, x_n)
+```
 
-- During training the decoder is fed the true previous tokens $y_0, y_1, \ldots$ as inputs.
+- During training the decoder is fed the true previous tokens $`y_0, y_1, \ldots`$ as inputs.
 - Gradients are backpropagated **through both the decoder and the encoder**, so both are trained jointly.
 - **Practical challenge: paired data.** A language model can use any text. An encoder-decoder must learn which sequences align with which, so it needs paired data (e.g., sentences with translations, code with its comments). That is much harder to find in the wild.
 
@@ -90,35 +98,42 @@ $$\mathcal{L} = \sum_{t=1}^{T} -\log P(y_t \mid y_1, \ldots, y_{t-1}, x_1, \ldot
 ## 4. Attention
 
 ### Attentive encoder-decoder
-Each encoder time step already produces an output $h_n^e$. **Idea:** use the decoder state to compute an **attention** (a mixture) over all the encoder outputs. Intuition: focus on different parts of the input at each time step.
+Each encoder time step already produces an output $`h_n^e`$. **Idea:** use the decoder state to compute an **attention** (a mixture) over all the encoder outputs. Intuition: focus on different parts of the input at each time step.
 
 ### The attention function, step by step
-Terminology: the encoder hidden states $h_n^e$ are the **keys**. The decoder hidden state $h_t^d$ (the "idea of what to decode") is the **query**. There is one query and many keys.
+Terminology: the encoder hidden states $`h_n^e`$ are the **keys**. The decoder hidden state $`h_t^d`$ (the "idea of what to decode") is the **query**. There is one query and many keys.
 
-1. **Scores.** Compute a pairwise similarity between the query and every key: $a_n = f(h_n^e, h_t^d)$.
+1. **Scores.** Compute a pairwise similarity between the query and every key: $`a_n = f(h_n^e, h_t^d)`$.
 2. **Weights.** Turn the scores into a probability distribution with softmax:
-$$\alpha_n = \frac{e^{a_n}}{\sum_j e^{a_j}}$$
-3. **Weighted sum.** Average the encoder states with these weights. Here $h_n^e$ also plays the role of the **value**:
-$$\tilde{h}_t^d = \sum_{n=1}^{N} \alpha_n h_n^e$$
 
-$\tilde{h}_t^d$ contains information from the encoder states that got high attention. It is usually concatenated with the original decoder state, $[h_t^d; \tilde{h}_t^d]$, before the output layer predicts $\hat{y}_t$. At the next time step you repeat everything and get a new distribution.
+```math
+\alpha_n = \frac{e^{a_n}}{\sum_j e^{a_j}}
+```
+
+3. **Weighted sum.** Average the encoder states with these weights. Here $`h_n^e`$ also plays the role of the **value**:
+
+```math
+\tilde{h}_t^d = \sum_{n=1}^{N} \alpha_n h_n^e
+```
+
+$`\tilde{h}_t^d`$ contains information from the encoder states that got high attention. It is usually concatenated with the original decoder state, $`[h_t^d; \tilde{h}_t^d]`$, before the output layer predicts $`\hat{y}_t`$. At the next time step you repeat everything and get a new distribution.
 
 <p align="center">
   <img src="images/lecture-05/attentive-encoder-decoder.png" alt="Attentive encoder-decoder: all encoder outputs h1e to h4e feed an Attention block on top of the decoder state h1d; attention weights alpha_n shown as a bar chart; the context vector is concatenated with h1d before the Output layer predicts y1" width="650">
 </p>
 <p align="center"><em>Every encoder state connects directly to the attention block; the weights α<sub>n</sub> decide how much each contributes to the context vector.</em></p>
 
-**Score functions $f$:**
+**Score functions $`f`$:**
 
 | Attention function | Formula |
 |---|---|
-| Multiplicative (bilinear) | $a = h^e W h^d$ |
-| Linear | $a = v^\top \phi(W[h^e; h^d])$ |
-| Scaled dot product | $a = \dfrac{(W h^e)^\top (U h^d)}{\sqrt{d}}$ |
+| Multiplicative (bilinear) | $`a = h^e W h^d`$ |
+| Linear | $`a = v^\top \phi(W[h^e; h^d])`$ |
+| Scaled dot product | $`a = \dfrac{(W h^e)^\top (U h^d)}{\sqrt{d}}`$ |
 
-A plain dot product $h^e \cdot h^d$ is another option.
+A plain dot product $`h^e \cdot h^d`$ is another option.
 
-**Range of attention weights.** Because they come from a softmax, each $\alpha_n$ lies between 0 and 1, and they sum to 1.
+**Range of attention weights.** Because they come from a softmax, each $`\alpha_n`$ lies between 0 and 1, and they sum to 1.
 
 ### Interpretability
 You can visualize the attention weights as a matrix (output words vs. input words). For an English to French translation this shows which source word was focused on for each generated word. Training with attention gives you an **implicit alignment for free**.
@@ -141,17 +156,21 @@ The encoder still suffers from vanishing gradients over long ranges. Worse, recu
 
 **Original idea:** the decoder state attends over encoder states. **New idea:** let the encoder states compute attention **over themselves**. This ditches recurrence, so all representations can be computed in parallel.
 
-Notation: $h_t^\ell$ is the encoder hidden state at time step $t$ in layer $\ell$.
+Notation: $`h_t^\ell`$ is the encoder hidden state at time step $`t`$ in layer $`\ell`$.
 
-**Toy example.** To compute the new representation of $h_3^0$, it acts as the **query**, and every state $h_1^0, \ldots, h_4^0$ (including itself) acts as a **key** and a **value**. Each role gets its own learned projection $W^Q$, $W^K$, $W^V$:
+**Toy example.** To compute the new representation of $`h_3^0`$, it acts as the **query**, and every state $`h_1^0, \ldots, h_4^0`$ (including itself) acts as a **key** and a **value**. Each role gets its own learned projection $`W^Q`$, $`W^K`$, $`W^V`$:
 
-$$a_{st} = \frac{(W^Q h_s^\ell)^\top (W^K h_t^\ell)}{\sqrt{d}} \qquad \alpha_{st} = \frac{e^{a_{st}}}{\sum_j e^{a_{sj}}} \qquad \tilde{h}_s^\ell = \sum_{t=1}^{T} \alpha_{st}\,(W^V h_t^\ell)$$
+```math
+a_{st} = \frac{(W^Q h_s^\ell)^\top (W^K h_t^\ell)}{\sqrt{d}} \qquad \alpha_{st} = \frac{e^{a_{st}}}{\sum_j e^{a_{sj}}} \qquad \tilde{h}_s^\ell = \sum_{t=1}^{T} \alpha_{st}\,(W^V h_t^\ell)
+```
 
-The sum runs over $\{1, \ldots, T\}$, which includes $s$ itself. That is what makes it *self*-attention. Dividing by $\sqrt{d}$ is the **scaled dot product**.
+The sum runs over $`\{1, \ldots, T\}`$, which includes $`s`$ itself. That is what makes it *self*-attention. Dividing by $`\sqrt{d}`$ is the **scaled dot product**.
 
-**Matrix form.** With query $q = h_s^\ell$ and keys = values = all states, $K = V = \{h_t^\ell\}$:
+**Matrix form.** With query $`q = h_s^\ell`$ and keys = values = all states, $`K = V = \{h_t^\ell\}`$:
 
-$$\mathbf{a} = \frac{(W^Q q)^\top (W^K K)}{\sqrt{d}}, \qquad \alpha = \text{softmax}(\mathbf{a}), \qquad \tilde{h}^\ell = W^O \alpha (V W^V)$$
+```math
+\mathbf{a} = \frac{(W^Q q)^\top (W^K K)}{\sqrt{d}}, \qquad \alpha = \text{softmax}(\mathbf{a}), \qquad \tilde{h}^\ell = W^O \alpha (V W^V)
+```
 
 For each attention computation, every element is a key and a value, and one element is the query. Repeat this with each position as the query. Every output is computed independently, so all of them can run in parallel.
 
@@ -160,9 +179,8 @@ For each attention computation, every element is a key and a value, and one elem
 </p>
 <p align="center"><em>Here h<sub>4</sub> is the query, but every state (including h<sub>4</sub> itself) serves as a key and a value.</em></p>
 
-
 ### Multi-head self-attention
-One attention distribution can only focus on one kind of relationship. **Multi-head** attention runs several self-attention computations ("heads" $M_1, \ldots, M_H$) in parallel, each with its own Q/K/V projections. Their outputs are combined into a single representation per word.
+One attention distribution can only focus on one kind of relationship. **Multi-head** attention runs several self-attention computations ("heads" $`M_1, \ldots, M_H`$) in parallel, each with its own Q/K/V projections. Their outputs are combined into a single representation per word.
 
 ### Two advantages of self-attention over recurrence
 1. **Parallel computation:** no state has to wait for the previous one.
@@ -176,14 +194,16 @@ One attention distribution can only focus on one kind of relationship. **Multi-h
 - A **feed-forward network**.
 - **Residual connections**: add a module's input to its output. These create shortcut paths that prevent vanishing gradients and keep crucial information from being lost.
 
-$$x' = x + \text{Attention}(x) \qquad x'' = x' + \text{FFN}(x')$$
+```math
+x' = x + \text{Attention}(x) \qquad x'' = x' + \text{FFN}(x')
+```
 
 (each followed by "Add & Norm").
 
 **How Transformers fight vanishing gradients.** They combine two ideas. Attention handles *sequence distance*: there is no long recurrent chain, and distant tokens connect directly. Residuals handle *network depth*: gradients flow through many layers. More generally, vanishing gradients are solved by making learning paths shorter, additive, or both.
 
 ### Full Transformer
-The encoder (left) and decoder (right) are each a stack of $N$ transformer blocks, with no recurrent computation. A decoder block has three layers:
+The encoder (left) and decoder (right) are each a stack of $`N`$ transformer blocks, with no recurrent computation. A decoder block has three layers:
 1. **Masked multi-head self-attention**
 2. Multi-head attention over the final-layer encoder outputs (**cross-attention**)
 3. A feed-forward network
@@ -196,7 +216,9 @@ The encoder (left) and decoder (right) are each a stack of $N$ transformer block
 ### Masked multi-head attention
 Plain self-attention lets a token attend to any token in the sequence. The decoder generates text, so tokens **must not attend to future tokens**. That would be cheating. The fix is to mask the scores of future tokens before the softmax:
 
-$$a_{st} := a_{st} - \infty \;\; \text{for future positions} \quad\Rightarrow\quad \alpha_{st} = \frac{e^{a_{st}}}{\sum_j e^{a_{sj}}} = 0$$
+```math
+a_{st} := a_{st} - \infty \;\; \text{for future positions} \quad\Rightarrow\quad \alpha_{st} = \frac{e^{a_{st}}}{\sum_j e^{a_{sj}}} = 0
+```
 
 ### Cross-attention
 Cross-attention is the classic attention from the RNN encoder-decoder. The **query** is the output of the decoder's masked self-attention (a decoder state). The **keys and values** are the outputs of the **final** encoder block. The decoder uses it to attend to the encoder outputs.
@@ -210,8 +232,12 @@ Cross-attention is the classic attention from the RNN encoder-decoder. The **que
 ### Position embeddings
 Recurrent models got word order for free. **Self-attention does not**: it is a weighted sum over a set, so shuffling the words gives the same result. Transformers therefore add a **position embedding** to each input and output embedding.
 
-- **Sinusoidal (early approach):** encode each position $i$ with sine and cosine functions, phase-shifted in proportion to the position:
-$$p_i = \begin{pmatrix} \sin(i/10000^{2\cdot 1/d}) \\ \cos(i/10000^{2\cdot 1/d}) \\ \vdots \\ \sin(i/10000^{2\cdot \frac{d}{2}/d}) \\ \cos(i/10000^{2\cdot \frac{d}{2}/d}) \end{pmatrix}$$
+- **Sinusoidal (early approach):** encode each position $`i`$ with sine and cosine functions, phase-shifted in proportion to the position:
+
+```math
+p_i = \begin{pmatrix} \sin(i/10000^{2\cdot 1/d}) \\ \cos(i/10000^{2\cdot 1/d}) \\ \vdots \\ \sin(i/10000^{2\cdot \frac{d}{2}/d}) \\ \cos(i/10000^{2\cdot \frac{d}{2}/d}) \end{pmatrix}
+```
+
 - **Learned (common in practice):** it is easiest to learn position embeddings from scratch, as a lookup table, one vector per position.
 - **Disadvantage of learned embeddings:** poor generalization to sequences longer than the maximum position you learned an embedding for.
 
@@ -223,7 +249,7 @@ $$p_i = \begin{pmatrix} \sin(i/10000^{2\cdot 1/d}) \\ \cos(i/10000^{2\cdot 1/d})
 - One vector for a whole sentence is a temporal bottleneck. Attention fixes it with direct links to every encoder state.
 - Attention = scores, then softmax weights (between 0 and 1, summing to 1), then a weighted sum of values.
 - Recurrent encoders run in series. Self-attention removes recurrence so every position is computed in parallel.
-- Scaled dot-product self-attention uses queries, keys and values: $\text{softmax}\big((W^Q q)^\top (W^K K)/\sqrt{d}\big)$ applied to the projected values.
+- Scaled dot-product self-attention uses queries, keys and values: $`\text{softmax}\big((W^Q q)^\top (W^K K)/\sqrt{d}\big)`$ applied to the projected values.
 - A Transformer block = multi-head attention + feed-forward, each with a residual connection and layer norm.
 - The decoder uses masked self-attention and cross-attention. Position embeddings supply the word order that self-attention lacks.
 
@@ -231,7 +257,7 @@ $$p_i = \begin{pmatrix} \sin(i/10000^{2\cdot 1/d}) \\ \cos(i/10000^{2\cdot 1/d})
 <details>
 <summary>Does the decoder have to be twice the dimensionality of a bidirectional encoder?</summary>
 
-No. Project the concatenated forward and backward states first: $h_0^{dec} = W_{dec}[h_n^{fwd}; h_n^{bwd}] + b_{dec}$.
+No. Project the concatenated forward and backward states first: $`h_0^{dec} = W_{dec}[h_n^{fwd}; h_n^{bwd}] + b_{dec}`$.
 </details>
 
 <details>
@@ -261,7 +287,7 @@ All positions can be computed in parallel, and any two positions interact direct
 <details>
 <summary>What is an issue with self-attention for the decoder, and what is a disadvantage of learned position embeddings?</summary>
 
-Plain self-attention would let the decoder see future tokens, so future scores are masked to $-\infty$, which gives them attention 0. Learned position embeddings generalize poorly to sequences longer than the maximum position seen in training.
+Plain self-attention would let the decoder see future tokens, so future scores are masked to $`-\infty`$, which gives them attention 0. Learned position embeddings generalize poorly to sequences longer than the maximum position seen in training.
 </details>
 
 ---

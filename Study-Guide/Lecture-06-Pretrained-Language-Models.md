@@ -27,17 +27,21 @@
 
 **Pretraining objective: causal language modelling** (next-word prediction). Minimise the negative log probability of the gold sequences in your dataset:
 
-$$\mathcal{L} = -\sum_{t=1}^{T} \log P\big(x_t^{\ast} \mid \{x_s^{\ast}\}_{s<t}\big)$$
+```math
+\mathcal{L} = -\sum_{t=1}^{T} \log P\big(x_t^{\ast} \mid \{x_s^{\ast}\}_{s<t}\big)
+```
 
-The input is `[START]` $x_1^{\ast} \dots x_T^{\ast}$ and the targets are the same tokens shifted by one, ending with `[END]`.
+The input is `[START]` $`x_1^{\ast} \dots x_T^{\ast}`$ and the targets are the same tokens shifted by one, ending with `[END]`.
 
 ## 3. Pretraining, then fine-tuning
 
 After pretraining, you use the pretrained model as the **initialisation** for training on individual task datasets. This is **fine-tuning**. You add a linear layer on top and minimise the cross-entropy of the gold label:
 
-$$\mathcal{L} = -\log P(y^{\ast} \mid X)$$
+```math
+\mathcal{L} = -\log P(y^{\ast} \mid X)
+```
 
-The input ends with a special `[CLS]` token; its final representation goes through a **linear projection (linear classifier)** to give $P(y^{\ast} \mid X)$.
+The input ends with a special `[CLS]` token; its final representation goes through a **linear projection (linear classifier)** to give $`P(y^{\ast} \mid X)`$.
 
 Different tasks are handled by **formatting the input** as a token sequence, not by changing the architecture:
 
@@ -63,7 +67,7 @@ Examples from class:
 
 **GPT-2** has roughly the same architecture as GPT but was trained on **40 GB** of data (**OpenWebText**: articles linked to/from Reddit threads). It came in four sizes:
 
-| Parameters | Layers | $d_{model}$ |
+| Parameters | Layers | $`d_{model}`$ |
 |---|---|---|
 | 117M | 12 | 768 |
 | 345M | 24 | 1024 |
@@ -89,16 +93,22 @@ GPT was **not** the first large-scale pretrained neural representation. Word emb
 **ELMo (Embeddings from Language Models, 2018)** fixes this with bidirectional LSTMs:
 - Train a **two-layer LSTM language model** on a large corpus.
 - The LSTMs are **bidirectional**: a forward LM and a backward LM. Training maximises
-$$\sum_{k=1}^{N}\Big(\log p(t_k \mid t_1,\dots,t_{k-1}) + \log p(t_k \mid t_{k+1},\dots,t_N)\Big)$$
-- Use the **hidden states** of each token as its embedding. These depend on the surrounding words, so "bank" gets $v_1 \neq v_2$ in the two sentences.
+
+```math
+\sum_{k=1}^{N}\Big(\log p(t_k \mid t_1,\dots,t_{k-1}) + \log p(t_k \mid t_{k+1},\dots,t_N)\Big)
+```
+
+- Use the **hidden states** of each token as its embedding. These depend on the surrounding words, so "bank" gets $`v_1 \neq v_2`$ in the two sentences.
 - It was trained on the 1B Word Benchmark, which contains **single sentences**, so it cannot learn context across sentences.
 
 **Using ELMo in a task.** Combine all layers with task-specific weights:
 
-$$\text{ELMo}_k^{task} = \gamma^{task} \sum_{j=0}^{L} s_j^{task}\, \mathbf{h}_{k,j}^{LM}$$
+```math
+\text{ELMo}_k^{task} = \gamma^{task} \sum_{j=0}^{L} s_j^{task}\, \mathbf{h}_{k,j}^{LM}
+```
 
-- $\mathbf{h}_{k,0}^{LM}$ (layer 0) is just the word embedding; higher layers are concatenations of the biLSTM hidden states.
-- $s_j^{task}$: softmax-normalised weights across layers. $\gamma^{task}$: scales the whole ELMo vector. Both are learned.
+- $`\mathbf{h}_{k,0}^{LM}`$ (layer 0) is just the word embedding; higher layers are concatenations of the biLSTM hidden states.
+- $`s_j^{task}`$: softmax-normalised weights across layers. $`\gamma^{task}`$: scales the whole ELMo vector. Both are learned.
 - **Why not just use the final layer?** For different tasks, useful representations are at different layers. Lower layers capture more local/syntactic cues (useful for POS tagging); higher layers capture more abstract/semantic cues (useful for semantic inference).
 
 **ELMo's issue:** it is a **unidirectional model masquerading as bidirectional**. A separate forward LM sees only the left context and a separate backward LM sees only the right context; their representations are concatenated. No single model sees both sides at once when predicting a word.
@@ -113,8 +123,8 @@ $$\text{ELMo}_k^{task} = \gamma^{task} \sum_{j=0}^{L} s_j^{task}\, \mathbf{h}_{k
 **Data and size.** BERT (Oct 2018) was trained on Toronto BooksCorpus (800 million tokens) and English Wikipedia (2.5 billion tokens): ~3.3 billion tokens from ~13 GB of data.
 
 **Architecture:** a Transformer **encoder**.
-- BERT-Base: 12 layers, $d=768$, 12 heads, 110M parameters
-- BERT-Large: 24 layers, $d=1024$, 16 heads, 340M parameters
+- BERT-Base: 12 layers, $`d=768`$, 12 heads, 110M parameters
+- BERT-Large: 24 layers, $`d=1024`$, 16 heads, 340M parameters
 
 **Two pretraining approaches:**
 - **Causal (left-to-right) LM** (GPT): "I really enjoyed the movie we watched on ____"
@@ -171,8 +181,15 @@ BERT also uses a **next sentence prediction (NSP)** task during pretraining; the
 
 - **RoBERTa** ("Robustly Optimised BERT"): same architecture, but a collection of training improvements, mainly **160 GB of data instead of 13 GB** and longer pretraining. It beats BERT-Large on SQuAD, MNLI and SST-2.
 - **DistilBERT:** BERT has many parameters, which need lots of storage. Train a smaller model by **distillation** over BERT's soft target probabilities, plus MLM:
-$$\mathcal{L}_{distil} = -P_{BERT}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big)\,\log P_{dbert}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big)$$
-$$\mathcal{L}_{mlm} = -\log P_{dbert}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big) \qquad \mathcal{L}_{tot} = \gamma_1\mathcal{L}_{distil} + \gamma_2\mathcal{L}_{mlm}$$
+
+```math
+\mathcal{L}_{distil} = -P_{BERT}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big)\,\log P_{dbert}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big)
+```
+
+```math
+\mathcal{L}_{mlm} = -\log P_{dbert}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big) \qquad \mathcal{L}_{tot} = \gamma_1\mathcal{L}_{distil} + \gamma_2\mathcal{L}_{mlm}
+```
+
 The much smaller DistilBERT keeps ~97% of BERT's performance.
 - **ELECTRA:** BERT only learns from the 15% masked tokens, which is inefficient. ELECTRA uses a small MLM **generator** to fill in masked tokens ("the chef **ate** the meal" instead of "cooked"), and a **discriminator** (ELECTRA) that predicts for **every** token whether it is *original* or *replaced*. Learning from all tokens drastically speeds up training: it reaches a given GLUE score with far fewer pretraining FLOPs.
 
@@ -257,7 +274,7 @@ Words have different meanings in different contexts, but static embeddings learn
 <details>
 <summary>Why does ELMo combine all layers with learned weights instead of using the final layer?</summary>
 
-Different tasks need different information: lower layers hold more local/syntactic cues, higher layers more semantic cues. Each task learns its own weights $s_j^{task}$.
+Different tasks need different information: lower layers hold more local/syntactic cues, higher layers more semantic cues. Each task learns its own weights $`s_j^{task}`$.
 </details>
 
 <details>

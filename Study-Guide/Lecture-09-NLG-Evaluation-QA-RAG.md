@@ -8,7 +8,7 @@
 - Describe extractive QA as start/end span prediction with BERT, and contrast it with generative QA
 - Compute Exact Match and F1 for a QA prediction and explain where they break down
 - Explain how dense passage retrieval (DPR) works and how it is trained
-- Describe a retrieval-augmented LM ($p(y \mid x)$ with retriever and LM) and place RAG, REALM, ERNIE and Toolformer in the landscape
+- Describe a retrieval-augmented LM ($`p(y \mid x)`$ with retriever and LM) and place RAG, REALM, ERNIE and Toolformer in the landscape
 
 ---
 
@@ -130,9 +130,9 @@ Often the best judge of output quality is **you**: look at your model's generati
 ### Generative QA
 Extractive QA forces the answer to occur in the context. Generative models output it **one token at a time**:
 
-$$
+```math
 P(\mathbf{a} \mid \mathbf{c}, \mathbf{q}; \theta) = \prod_{i=1}^{|\mathbf{a}|} P(a_i \mid \mathbf{c}, \mathbf{q}, \mathbf{a}_{<i}; \theta)
-$$
+```
 
 This works **open-book** (with context) or **closed-book** (without), with autoregressive LMs (GPT) or seq2seq models (T5, BART) fine-tuned on QA examples.
 
@@ -169,29 +169,29 @@ Ask ChatGPT "Who won the first round of presidential elections in Turkey last Su
 For "Where the financial crisis of 2008 started?", you could concatenate all documents into one long input, but long context is still a work in progress beyond simple look-up. Instead, first **retrieve** documents that might contain the answer, then read them.
 
 ### Dense Passage Retrieval (DPR)
-Encode documents and query into one vector space and retrieve the top-$k$ documents. Passage encoder $E_P(\cdot)$, query encoder $E_Q(\cdot)$, dot-product similarity:
+Encode documents and query into one vector space and retrieve the top-$`k`$ documents. Passage encoder $`E_P(\cdot)`$, query encoder $`E_Q(\cdot)`$, dot-product similarity:
 
-$$
+```math
 \text{sim}(q, p) = E_Q(q)^\top E_P(p)
-$$
+```
 
 <p align="center">
   <img src="images/lecture-09/dense-passage-retrieval.png" alt="DPR: documents encoded by E_P and the query by E_Q into vectors in a shared space; the passages nearest the query vector are retrieved" width="700">
 </p>
 <p align="center"><em>Two separate encoders map passages and the query into the same space; the passages closest to the query (orange) are retrieved.</em></p>
 
-**Training** goal: relevant question–passage pairs should be closer than irrelevant ones. For question $q_i$ with one positive passage $p_i^+$ and $n$ negatives $p_{i,j}^-$:
+**Training** goal: relevant question–passage pairs should be closer than irrelevant ones. For question $`q_i`$ with one positive passage $`p_i^+`$ and $`n`$ negatives $`p_{i,j}^-`$:
 
-$$
+```math
 L(q_i, p_i^+, p_{i,1}^-, \dots, p_{i,n}^-) = -\log \frac{e^{\text{sim}(q_i, p_i^+)}}{e^{\text{sim}(q_i, p_i^+)} + \sum_{j=1}^{n} e^{\text{sim}(q_i, p_{i,j}^-)}}
-$$
+```
 
 ### The retrieval-augmented LM
-A **retriever** $p(z \mid x)$ picks documents $z$ for input $x$ ($z$ is often a latent variable), and the **LM** produces the answer given the query and retrieved documents:
+A **retriever** $`p(z \mid x)`$ picks documents $`z`$ for input $`x`$ ($`z`$ is often a latent variable), and the **LM** produces the answer given the query and retrieved documents:
 
-$$
+```math
 p(y \mid x) = \sum_{z \in Z} p(z \mid x)\, p(y \mid z, x), \qquad p(y \mid z, x) = \prod_{i}^{N} p(y_i \mid x, z, y_{1:i-1})
-$$
+```
 
 **Terminology:** *memory* = knowledge stored in parameters. The LM's memory is **implicit/parametric**; the retriever's is **explicit/non-parametric**. *Modalities* = the type of external source: knowledge bases, knowledge graphs, tools.
 
@@ -227,7 +227,7 @@ $$
 | | Closed-book | Retrieval |
 |---|---|---|
 | Knowledge | In parameters (static) | External, updatable |
-| Size | Largest models ~$O(10^{11})$ params | Often ~$O(10^9)$ params |
+| Size | Largest models ~$`O(10^{11})`$ params | Often ~$`O(10^9)`$ params |
 
 All leading open-domain QA models use retrieval, and they are much more efficient than the largest LLMs. In the LLM era, retrieval augments the prompt, and models increasingly interact with tools and APIs.
 
@@ -276,7 +276,7 @@ EM = 0, because the strings differ. F1 is positive, because the tokens "Emmanuel
 <details>
 <summary>How is DPR trained, and how does it score a passage at test time?</summary>
 
-Score = $E_Q(q)^\top E_P(p)$. Training uses a negative log-likelihood loss that pushes the positive passage's similarity above the negatives'.
+Score = $`E_Q(q)^\top E_P(p)`$. Training uses a negative log-likelihood loss that pushes the positive passage's similarity above the negatives'.
 </details>
 
 ---

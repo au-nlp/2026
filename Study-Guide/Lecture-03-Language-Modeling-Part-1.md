@@ -7,7 +7,7 @@
 - Apply the Markov assumption to build unigram, bigram and n-gram models from counts
 - Define perplexity, compute it for a uniform model, and explain what it measures
 - Name the main shortcomings of n-gram LMs and the four families of smoothing
-- Describe a fixed-context neural LM, including the shapes of $W$ and $U$
+- Describe a fixed-context neural LM, including the shapes of $`W`$ and $`U`$
 - Write down the Elman RNN equations and explain how an RNN handles sequences of any length
 
 ---
@@ -16,54 +16,64 @@
 
 A **language model (LM)** is a probabilistic model of a sequence of tokens: how likely is this phrase, sentence or document?
 
-A sequence $w_1, w_2, \dots, w_n$ is modelled as a **joint distribution** over its tokens:
+A sequence $`w_1, w_2, \dots, w_n`$ is modelled as a **joint distribution** over its tokens:
 
-$$P(w_1, w_2, w_3, \dots, w_n)$$
+```math
+P(w_1, w_2, w_3, \dots, w_n)
+```
 
 **Applications.** Predicting the next words matters in many settings:
-- **Text generation:** $P(\text{a } \textbf{smooth} \text{ finish}) > P(\text{a } \textbf{flat} \text{ finish})$
-- **Spell checking:** $P(\text{high school } \textbf{principal}) > P(\text{high school } \textbf{principle})$
+- **Text generation:** $`P(\text{a } \textbf{smooth} \text{ finish}) > P(\text{a } \textbf{flat} \text{ finish})`$
+- **Spell checking:** $`P(\text{high school } \textbf{principal}) > P(\text{high school } \textbf{principle})`$
 - **Modern uses:** information extraction, question answering, and more.
 
 ## 2. The chain rule and counting
 
 To compute the joint probability, use the **chain rule**. Each word is conditioned on everything before it (its **prefix**):
 
-$$P(w_1, \dots, w_n) = P(w_1)\,P(w_2 \mid w_1)\,P(w_3 \mid w_1, w_2)\cdots P(w_n \mid w_1, \dots, w_{n-1}) = \prod_i P(w_i \mid w_1, \dots, w_{i-1})$$
+```math
+P(w_1, \dots, w_n) = P(w_1)\,P(w_2 \mid w_1)\,P(w_3 \mid w_1, w_2)\cdots P(w_n \mid w_1, \dots, w_{n-1}) = \prod_i P(w_i \mid w_1, \dots, w_{i-1})
+```
 
 Example, "the cat sat on the mat":
 
-$$P(\text{the})\cdot P(\text{cat}\mid\text{the})\cdot P(\text{sat}\mid\text{the cat})\cdot P(\text{on}\mid\text{the cat sat})\cdot P(\text{the}\mid\text{the cat sat on})\cdot P(\text{mat}\mid\text{the cat sat on the})$$
+```math
+P(\text{the})\cdot P(\text{cat}\mid\text{the})\cdot P(\text{sat}\mid\text{the cat})\cdot P(\text{on}\mid\text{the cat sat})\cdot P(\text{the}\mid\text{the cat sat on})\cdot P(\text{mat}\mid\text{the cat sat on the})
+```
 
 **Count-based modeling** estimates each factor by counting sequences in a corpus:
 
-$$P(\text{sat} \mid \text{the cat}) = \frac{\text{count}(\text{the cat sat})}{\text{count}(\text{the cat})}$$
+```math
+P(\text{sat} \mid \text{the cat}) = \frac{\text{count}(\text{the cat sat})}{\text{count}(\text{the cat})}
+```
 
 A note on terms:
-- **Word type:** a unique word in the vocabulary $V$.
+- **Word type:** a unique word in the vocabulary $`V`$.
 - **Token:** one occurrence of a word type in the corpus.
 
-**Why counting full histories fails.** With vocabulary size $V$, there are $V^n$ possible sequences of length $n$. A typical vocabulary has about 40K words. Even sentences of length at most 11 give more than $4 \times 10^{50}$ possible sequences. That is more than the number of atoms in the earth. You will never see most of them, so their counts are zero.
+**Why counting full histories fails.** With vocabulary size $`V`$, there are $`V^n`$ possible sequences of length $`n`$. A typical vocabulary has about 40K words. Even sentences of length at most 11 give more than $`4 \times 10^{50}`$ possible sequences. That is more than the number of atoms in the earth. You will never see most of them, so their counts are zero.
 
 ## 3. The Markov assumption and n-gram models
 
 The **Markov assumption**: use only the recent past to predict the next word. You trade some modelling capacity for far fewer parameters.
 
-- 1st order: $P(\text{mat} \mid \text{the cat sat on the}) \approx P(\text{mat} \mid \text{the})$
-- 2nd order: $P(\text{mat} \mid \text{the cat sat on the}) \approx P(\text{mat} \mid \text{on the})$
+- 1st order: $`P(\text{mat} \mid \text{the cat sat on the}) \approx P(\text{mat} \mid \text{the})`$
+- 2nd order: $`P(\text{mat} \mid \text{the cat sat on the}) \approx P(\text{mat} \mid \text{on the})`$
 
-A **k-th order Markov** model keeps only the last $k$ words:
+A **k-th order Markov** model keeps only the last $`k`$ words:
 
-$$P(w_i \mid w_1 \dots w_{i-1}) \approx P(w_i \mid w_{i-k} \dots w_{i-1}) \quad\Rightarrow\quad P(w_1 \dots w_n) \approx \prod_i P(w_i \mid w_{i-k} \dots w_{i-1})$$
+```math
+P(w_i \mid w_1 \dots w_{i-1}) \approx P(w_i \mid w_{i-k} \dots w_{i-1}) \quad\Rightarrow\quad P(w_1 \dots w_n) \approx \prod_i P(w_i \mid w_{i-k} \dots w_{i-1})
+```
 
-(ignoring $w_j$ for $j < 0$).
+(ignoring $`w_j`$ for $`j < 0`$).
 
 This gives **n-gram models**:
-- **Unigram:** $P(w_1, \dots, w_n) = \prod_{i=1}^n P(w_i)$
-- **Bigram:** $P(w_1, \dots, w_n) = \prod_{i=1}^n P(w_i \mid w_{i-1})$
+- **Unigram:** $`P(w_1, \dots, w_n) = \prod_{i=1}^n P(w_i)`$
+- **Bigram:** $`P(w_1, \dots, w_n) = \prod_{i=1}^n P(w_i \mid w_{i-1})`$
 - Trigram, 4-gram, and so on.
 
-Larger $n$ gives better models, but at higher cost, and only assuming infinite data.
+Larger $`n`$ gives better models, but at higher cost, and only assuming infinite data.
 
 **Generation.** You generate text by sampling one word at a time from these conditional probabilities. In class, unigram output was word salad, bigram output locally fluent, and trigram output much closer to real text.
 
@@ -82,31 +92,35 @@ A good LM gives higher probability to typical, grammatical sentences. The resear
 
 ## 5. Perplexity
 
-**Perplexity (ppl)** measures how well a probability distribution (an LM) predicts a sample. For a test corpus $S$ with sentences $S^1, \dots, S^n$ and $W$ total words:
+**Perplexity (ppl)** measures how well a probability distribution (an LM) predicts a sample. For a test corpus $`S`$ with sentences $`S^1, \dots, S^n`$ and $`W`$ total words:
 
-$$\text{ppl}(S) = 2^{x}, \qquad x = -\frac{1}{W}\sum_{i=1}^{n} \log_2 P(S^i)$$
+```math
+\text{ppl}(S) = 2^{x}, \qquad x = -\frac{1}{W}\sum_{i=1}^{n} \log_2 P(S^i)
+```
 
-The exponent $x$ is the **cross-entropy**: the average negative log-probability per word. So perplexity is the exponentiated token-level negative log-likelihood.
+The exponent $`x`$ is the **cross-entropy**: the average negative log-probability per word. So perplexity is the exponentiated token-level negative log-likelihood.
 
-For a unigram model, $P(S^i) = \prod_j P(w^i_j)$, so $x = -\frac{1}{W}\sum_{i=1}^{n}\sum_{j=1}^{m}\log_2 P(w^i_j)$.
+For a unigram model, $`P(S^i) = \prod_j P(w^i_j)`$, so $`x = -\frac{1}{W}\sum_{i=1}^{n}\sum_{j=1}^{m}\log_2 P(w^i_j)`$.
 
 **Lower is better.** Minimising perplexity is the same as maximising the probability of the test corpus.
 
-**Intuition (uniform model).** Suppose every word is equally likely: $P(w_i \mid w_{i-n}, \dots, w_{i-1}) = \frac{1}{|V|}$. Then
+**Intuition (uniform model).** Suppose every word is equally likely: $`P(w_i \mid w_{i-n}, \dots, w_{i-1}) = \frac{1}{|V|}`$. Then
 
-$$\text{ppl} = 2^{-\frac{1}{W}\cdot W \cdot \log_2 \frac{1}{|V|}} = |V|$$
+```math
+\text{ppl} = 2^{-\frac{1}{W}\cdot W \cdot \log_2 \frac{1}{|V|}} = |V|
+```
 
 Perplexity measures the model's **uncertainty about the next word**.
 
-**Why logs?** Multiplying many small probabilities underflows; summing logs is stable. In theory perplexity uses base 2; in practice the base does not matter, and $e$ is common.
+**Why logs?** Multiplying many small probabilities underflows; summing logs is stable. In theory perplexity uses base 2; in practice the base does not matter, and $`e`$ is common.
 
-**Perplexity and vocabulary.** The uniform case shows that perplexity depends on $|V|$. Models with different vocabularies are therefore not directly comparable by perplexity.
+**Perplexity and vocabulary.** The uniform case shows that perplexity depends on $`|V|`$. Models with different vocabularies are therefore not directly comparable by perplexity.
 
 | Pros | Cons |
 |---|---|
 | Easy to compute | Train and test domains must match |
 | Standardised | May not reflect end-task performance |
-| Directly useful (e.g. to pick the more likely correction) | $\log 0$ is undefined |
+| Directly useful (e.g. to pick the more likely correction) | $`\log 0`$ is undefined |
 | Nice theoretical interpretation (matching distributions) | Can be "cheated" by predicting common tokens |
 | | Size of the test set matters |
 | | Sensitive to low-probability tokens/sentences |
@@ -115,11 +129,11 @@ Perplexity measures the model's **uncertainty about the next word**.
 
 **Exponential decay of counts.** Longer contexts are seen far less often. In one corpus, *to* appears 1M times, *go to* 50,000 times, *to go to* 1,500 times and *want to go to* only 100 times. Counts get sparse fast, yet you often need information from 5+ words away.
 
-**Unseen n-grams.** The test set may contain n-grams never seen in training. Train on Google News and test on Shakespeare: $P(\text{affray} \mid \text{voice doth us}) = 0$. One zero makes $P(\text{test corpus}) = 0$, and perplexity becomes undefined.
+**Unseen n-grams.** The test set may contain n-grams never seen in training. Train on Google News and test on Shakespeare: $`P(\text{affray} \mid \text{voice doth us}) = 0`$. One zero makes $`P(\text{test corpus}) = 0`$, and perplexity becomes undefined.
 
-**Shakespeare as a corpus.** It has $N = 884{,}647$ tokens and $V = 29{,}066$ word types. Shakespeare produced about 300K bigram types out of $V^2 \approx 844$M possible bigrams. So 99.96% of possible bigrams were never seen.
+**Shakespeare as a corpus.** It has $`N = 884{,}647`$ tokens and $`V = 29{,}066`$ word types. Shakespeare produced about 300K bigram types out of $`V^2 \approx 844`$M possible bigrams. So 99.96% of possible bigrams were never seen.
 
-**Sparsity is built into language.** By Zipf's law, a word's probability scales inversely with its frequency rank: $p(w_i) \propto 1/i$. There is a long tail of rare words, and any finite corpus will miss many combinations.
+**Sparsity is built into language.** By Zipf's law, a word's probability scales inversely with its frequency rank: $`p(w_i) \propto 1/i`$. There is a long tail of rare words, and any finite corpus will miss many combinations.
 
 ## 7. Smoothing
 
@@ -137,19 +151,25 @@ Perplexity measures the model's **uncertainty about the next word**.
 | **Back-off** | Use a lower-order n-gram if the higher-order one is too sparse |
 | **Interpolation** | Combine n-grams of different orders |
 
-**Laplace (add-$\alpha$) smoothing**, the simplest heuristic: add $\alpha$ to all counts and renormalise. The bigram maximum-likelihood estimate
+**Laplace (add-$`\alpha`$) smoothing**, the simplest heuristic: add $`\alpha`$ to all counts and renormalise. The bigram maximum-likelihood estimate
 
-$$P(w_i \mid w_{i-1}) = \frac{C(w_{i-1}, w_i)}{C(w_{i-1})}$$
+```math
+P(w_i \mid w_{i-1}) = \frac{C(w_{i-1}, w_i)}{C(w_{i-1})}
+```
 
 becomes
 
-$$P(w_i \mid w_{i-1}) = \frac{C(w_{i-1}, w_i) + \alpha}{C(w_{i-1}) + \alpha|V|}$$
+```math
+P(w_i \mid w_{i-1}) = \frac{C(w_{i-1}, w_i) + \alpha}{C(w_{i-1}) + \alpha|V|}
+```
 
-The $\alpha|V|$ in the denominator keeps the distribution summing to 1.
+The $`\alpha|V|`$ in the denominator keeps the distribution summing to 1.
 
 **Linear interpolation** mixes models of different orders:
 
-$$\hat P(w_i \mid w_{i-1}, w_{i-2}) = \lambda_1 P(w_i \mid w_{i-1}, w_{i-2}) + \lambda_2 P(w_i \mid w_{i-1}) + \lambda_3 P(w_i), \qquad \sum_i \lambda_i = 1$$
+```math
+\hat P(w_i \mid w_{i-1}, w_{i-2}) = \lambda_1 P(w_i \mid w_{i-1}, w_{i-2}) + \lambda_2 P(w_i \mid w_{i-1}) + \lambda_3 P(w_i), \qquad \sum_i \lambda_i = 1
+```
 
 It has strong empirical performance.
 
@@ -159,20 +179,20 @@ n-gram LMs treat every word and prefix as independent. There is no similarity un
 
 ## 9. Fixed-context neural language models
 
-A neural model composes word embeddings into a vector $h$ for the prefix, then predicts the next word from it.
+A neural model composes word embeddings into a vector $`h`$ for the prefix, then predicts the next word from it.
 
-**Vocabulary projection + softmax.** Given a $d$-dimensional representation of a prefix:
-1. Project it to a $|V|$-dimensional vector with a matrix-vector product (a "linear" or "feedforward" layer).
+**Vocabulary projection + softmax.** Given a $`d`$-dimensional representation of a prefix:
+1. Project it to a $`|V|`$-dimensional vector with a matrix-vector product (a "linear" or "feedforward" layer).
 2. Apply softmax to turn it into a probability distribution over the whole vocabulary.
 
 For "students opened their", the distribution might put high mass on *books* and *laptops*.
 
-**Architecture** for $P(\text{mat} \mid \text{the cat sat on the})$ with a window of $n = 5$ words, each embedding in $\mathbb{R}^d$:
-- **Input layer:** concatenate the embeddings: $\mathbf{x} = [\mathbf{e}_{\text{the}}; \mathbf{e}_{\text{cat}}; \mathbf{e}_{\text{sat}}; \mathbf{e}_{\text{on}}; \mathbf{e}_{\text{the}}] \in \mathbb{R}^{dn}$
-- **Hidden layer:** $\mathbf{h} = \tanh(\mathbf{W}\mathbf{x} + \mathbf{b}) \in \mathbb{R}^{h}$
-- **Output layer:** $\mathbf{z} = \mathbf{U}\mathbf{h} \in \mathbb{R}^{|V|}$, and $P(w = i \mid \text{the cat sat on the}) = \text{softmax}_i(\mathbf{z}) = \dfrac{e^{z_i}}{\sum_k e^{z_k}}$
+**Architecture** for $`P(\text{mat} \mid \text{the cat sat on the})`$ with a window of $`n = 5`$ words, each embedding in $`\mathbb{R}^d`$:
+- **Input layer:** concatenate the embeddings: $`\mathbf{x} = [\mathbf{e}_{\text{the}}; \mathbf{e}_{\text{cat}}; \mathbf{e}_{\text{sat}}; \mathbf{e}_{\text{on}}; \mathbf{e}_{\text{the}}] \in \mathbb{R}^{dn}`$
+- **Hidden layer:** $`\mathbf{h} = \tanh(\mathbf{W}\mathbf{x} + \mathbf{b}) \in \mathbb{R}^{h}`$
+- **Output layer:** $`\mathbf{z} = \mathbf{U}\mathbf{h} \in \mathbb{R}^{|V|}`$, and $`P(w = i \mid \text{the cat sat on the}) = \text{softmax}_i(\mathbf{z}) = \dfrac{e^{z_i}}{\sum_k e^{z_k}}`$
 
-So $\mathbf{W} \in \mathbb{R}^{h \times dn}$ and $\mathbf{U} \in \mathbb{R}^{|V| \times h}$.
+So $`\mathbf{W} \in \mathbb{R}^{h \times dn}`$ and $`\mathbf{U} \in \mathbb{R}^{|V| \times h}`$.
 
 <p align="center">
   <img src="images/lecture-03/fixed-context-neural-lm.png" alt="Fixed-context neural LM: five word embeddings in R^d (the, cat, sat, on, the) are concatenated into a 5d vector, mapped to a hidden layer in R^h, then to a distribution P(w = i)" width="500">
@@ -184,16 +204,16 @@ This model most resembles **CBOW**: both predict a word from a window of context
 | Advantages | Disadvantages |
 |---|---|
 | No sparsity problem: softmax gives every sequence non-zero probability | Fixed windows are still too small for long-range dependencies |
-| Much smaller model: size depends on the number of weights, not the number of sequences | A larger window makes $\mathbf{W}$ larger (more expensive) |
-| | Weights in $\mathbf{W}$ are not shared across positions in the window (inefficient) |
+| Much smaller model: size depends on the number of weights, not the number of sequences | A larger window makes $`\mathbf{W}`$ larger (more expensive) |
+| | Weights in $`\mathbf{W}`$ are not shared across positions in the window (inefficient) |
 
-**Sequences vary in length.** "The cat chased the mouse" can grow into "The starving cat, who had not eaten in six days, fanatically chased the elusive mouse". A 5-word window works for $P(\text{mouse} \mid \text{cat fanatically chased after the})$ but fails for $P(\text{mouse} \mid \text{fanatically chased after the elusive})$: *cat* has dropped out of the window.
+**Sequences vary in length.** "The cat chased the mouse" can grow into "The starving cat, who had not eaten in six days, fanatically chased the elusive mouse". A 5-word window works for $`P(\text{mouse} \mid \text{cat fanatically chased after the})`$ but fails for $`P(\text{mouse} \mid \text{fanatically chased after the elusive})`$: *cat* has dropped out of the window.
 
 ## 10. Recurrent neural networks (RNNs)
 
-An **RNN** is a neural network with a feedback loop. At each time step $t$ it takes input $x_t$, updates a **state** $h_t$ using the previous state, and produces output $z_t$.
+An **RNN** is a neural network with a feedback loop. At each time step $`t`$ it takes input $`x_t`$, updates a **state** $`h_t`$ using the previous state, and produces output $`z_t`$.
 
-**Unrolling.** Unrolling the RNN across all time steps gives the full computation graph: a chain of identical units, each passing $h_t$ to the next. This lets the model learn from the entire history, regardless of length.
+**Unrolling.** Unrolling the RNN across all time steps gives the full computation graph: a chain of identical units, each passing $`h_t`$ to the next. This lets the model learn from the entire history, regardless of length.
 
 <p align="center">
   <img src="images/lecture-03/rnn-unrolled.png" alt="Unrolled RNN over three time steps: each unit takes input x_t from below, emits output z_t above, and passes hidden state h_t to the right into the next unit" width="700">
@@ -201,7 +221,7 @@ An **RNN** is a neural network with a feedback loop. At each time step $t$ it ta
 <p align="center"><em>The same unit repeats at every step: the hidden state h flows left to right, carrying the history forward.</em></p>
 
 How you use an RNN depends on the task:
-- **Classification:** put a classifier on the last output, $P(y) = \sigma(W_o z_T)$ (binary) or $P(y) = \text{softmax}(W_o z_T)$ (multi-class). You use the last unit because it is the only one that has seen the whole sequence.
+- **Classification:** put a classifier on the last output, $`P(y) = \sigma(W_o z_T)`$ (binary) or $`P(y) = \text{softmax}(W_o z_T)`$ (multi-class). You use the last unit because it is the only one that has seen the whole sequence.
 - **Sequence labeling:** put a classifier on every output, e.g. part-of-speech tags for "cat fanatically chased the mouse".
 - **Text generation:** predict the next word at each step and feed it back in as the next input, until an `<EOS>` token.
 
@@ -216,25 +236,29 @@ RNNs trained on Shakespeare or Wikipedia generate text with a convincing style a
 
 The classical RNN is the **Elman network**:
 
-$$h_t = \sigma(W_{hx}x_t + W_{hh}h_{t-1} + b_h)$$
+```math
+h_t = \sigma(W_{hx}x_t + W_{hh}h_{t-1} + b_h)
+```
 
-$$z_t = \sigma(W_{zh}h_t + b_z)$$
+```math
+z_t = \sigma(W_{zh}h_t + b_z)
+```
 
 Two key components:
-1. **Memory:** the state $h$ carries information across time steps. The term $W_{hh}h_{t-1}$ is what lets the model remember earlier tokens.
-2. **Shared parameters:** $W_{hx}, W_{hh}, W_{zh}$ (and the biases) are the same at every time step. So the model size does not grow with sequence length.
+1. **Memory:** the state $`h`$ carries information across time steps. The term $`W_{hh}h_{t-1}`$ is what lets the model remember earlier tokens.
+2. **Shared parameters:** $`W_{hx}, W_{hh}, W_{zh}`$ (and the biases) are the same at every time step. So the model size does not grow with sequence length.
 
-To start the recurrence you need an initial state $h_0$ (commonly a zero vector).
+To start the recurrence you need an initial state $`h_0`$ (commonly a zero vector).
 
-**Objective.** Learn the parameter matrices $W_{hh}$, $W_{hx}$, $W_{zh}$ so that the RNN can represent textual sequences. How to train them (and the problems that arise) is covered in Lecture 4.
+**Objective.** Learn the parameter matrices $`W_{hh}`$, $`W_{hx}`$, $`W_{zh}`$ so that the RNN can represent textual sequences. How to train them (and the problems that arise) is covered in Lecture 4.
 
 ---
 
 ## Key takeaways
-- An LM estimates $P(w_1, \dots, w_n)$; the chain rule factors it into next-word predictions.
-- Counting full histories is impossible: there are $V^n$ possible sequences.
-- The Markov assumption gives n-gram models: condition only on the last $k$ words.
-- Perplexity $= 2^{\text{cross-entropy}}$; lower is better; a uniform model has perplexity $|V|$.
+- An LM estimates $`P(w_1, \dots, w_n)`$; the chain rule factors it into next-word predictions.
+- Counting full histories is impossible: there are $`V^n`$ possible sequences.
+- The Markov assumption gives n-gram models: condition only on the last $`k`$ words.
+- Perplexity $`= 2^{\text{cross-entropy}}`$; lower is better; a uniform model has perplexity $`|V|`$.
 - n-gram LMs suffer from sparsity (zero counts, Zipf's long tail) and need smoothing: additive, discounting, back-off, interpolation.
 - n-grams share nothing between similar prefixes; neural LMs fix this with embeddings.
 - Fixed-context neural LMs remove sparsity but still have a fixed window.
@@ -245,25 +269,25 @@ To start the recurrence you need an initial state $h_0$ (commonly a zero vector)
 <details>
 <summary>Do you see any problems with estimating probabilities by counting full sequences?</summary>
 
-The number of possible sequences of length $n$ is $V^n$. With $V \approx$ 40K and length up to 11, that is over $4 \times 10^{50}$ sequences. Almost all have zero counts in any corpus.
+The number of possible sequences of length $`n`$ is $`V^n`$. With $`V \approx`$ 40K and length up to 11, that is over $`4 \times 10^{50}`$ sequences. Almost all have zero counts in any corpus.
 </details>
 
 <details>
-<summary>An n-gram model assigns every word probability $1/|V|$. What is its perplexity on a test corpus?</summary>
+<summary>An n-gram model assigns every word probability $`1/|V|`$. What is its perplexity on a test corpus?</summary>
 
-$\text{ppl} = 2^{-\frac{1}{W} \cdot W \log_2 (1/|V|)} = |V|$. Every word is equally likely, so the model is maximally uncertain.
+$`\text{ppl} = 2^{-\frac{1}{W} \cdot W \log_2 (1/|V|)} = |V|`$. Every word is equally likely, so the model is maximally uncertain.
 </details>
 
 <details>
 <summary>Why can a single unseen n-gram break perplexity, and how do you fix it?</summary>
 
-If any test n-gram has probability 0, the corpus probability is 0, $\log 0$ is undefined, and so is perplexity. Smoothing (e.g. add-$\alpha$, interpolation) gives every n-gram non-zero probability.
+If any test n-gram has probability 0, the corpus probability is 0, $`\log 0`$ is undefined, and so is perplexity. Smoothing (e.g. add-$`\alpha`$, interpolation) gives every n-gram non-zero probability.
 </details>
 
 <details>
 <summary>In the fixed-context neural LM, what are the dimensions of W and U?</summary>
 
-$\mathbf{W}$ maps $\mathbb{R}^{dn} \to \mathbb{R}^h$, so it is $h \times dn$. $\mathbf{U}$ maps $\mathbb{R}^h \to \mathbb{R}^{|V|}$, so it is $|V| \times h$.
+$`\mathbf{W}`$ maps $`\mathbb{R}^{dn} \to \mathbb{R}^h`$, so it is $`h \times dn`$. $`\mathbf{U}`$ maps $`\mathbb{R}^h \to \mathbb{R}^{|V|}`$, so it is $`|V| \times h`$.
 </details>
 
 <details>
@@ -275,7 +299,7 @@ CBOW: both predict a word from a window of context word embeddings.
 <details>
 <summary>What part of the Elman network lets it maintain a state of previous tokens?</summary>
 
-The previous hidden state $h_{t-1}$, fed in through $W_{hh}h_{t-1}$. Together with weights shared across time steps, this lets the RNN handle sequences of any length.
+The previous hidden state $`h_{t-1}`$, fed in through $`W_{hh}h_{t-1}`$. Together with weights shared across time steps, this lets the RNN handle sequences of any length.
 </details>
 
 ---
