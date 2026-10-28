@@ -156,7 +156,7 @@ The fix: use **gates** so the gradient is not dampened at every step.
 |---|---|
 | $`h_t = \sigma(W_{hx} x_t + W_{hh} h_{t-1} + b_h)`$ | $`h_t = h_{t-1} \odot \mathbf{f} + \text{func}(x_t)`$ |
 
-- The **gate value** $`\mathbf{f}`$ decides how much information from the previous hidden state moves to the next step, with $`0 < f < 1`$.
+- The **gate value** $`\mathbf{f}`$ decides how much information from the previous hidden state moves to the next step, with $`0 \lt  f \lt  1`$.
 - Because $`h_{t-1}`$ is **no longer inside the activation function**, it is not automatically squashed. This reduces vanishing gradients.
 
 ## 10. Long short-term memory (LSTM)

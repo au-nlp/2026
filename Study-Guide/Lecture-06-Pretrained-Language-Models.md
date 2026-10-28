@@ -28,7 +28,7 @@
 **Pretraining objective: causal language modelling** (next-word prediction). Minimise the negative log probability of the gold sequences in your dataset:
 
 ```math
-\mathcal{L} = -\sum_{t=1}^{T} \log P\big(x_t^{\ast} \mid \{x_s^{\ast}\}_{s<t}\big)
+\mathcal{L} = -\sum_{t=1}^{T} \log P\big(x_t^{\ast} \mid \{x_s^{\ast}\}_{s\lt t}\big)
 ```
 
 The input is `[START]` $`x_1^{\ast} \dots x_T^{\ast}`$ and the targets are the same tokens shifted by one, ending with `[END]`.

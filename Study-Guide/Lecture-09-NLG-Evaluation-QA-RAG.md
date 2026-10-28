@@ -131,7 +131,7 @@ Often the best judge of output quality is **you**: look at your model's generati
 Extractive QA forces the answer to occur in the context. Generative models output it **one token at a time**:
 
 ```math
-P(\mathbf{a} \mid \mathbf{c}, \mathbf{q}; \theta) = \prod_{i=1}^{|\mathbf{a}|} P(a_i \mid \mathbf{c}, \mathbf{q}, \mathbf{a}_{<i}; \theta)
+P(\mathbf{a} \mid \mathbf{c}, \mathbf{q}; \theta) = \prod_{i=1}^{|\mathbf{a}|} P(a_i \mid \mathbf{c}, \mathbf{q}, \mathbf{a}_{\lt i}; \theta)
 ```
 
 This works **open-book** (with context) or **closed-book** (without), with autoregressive LMs (GPT) or seq2seq models (T5, BART) fine-tuned on QA examples.

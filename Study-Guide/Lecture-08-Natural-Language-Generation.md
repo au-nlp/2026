@@ -24,25 +24,25 @@ The question for this lecture: *how do we make deep learning models generate nat
 
 ## 2. Basics of NLG
 
-Most text generators are **autoregressive**: they predict the **next token** from the **past tokens**. At each time step $`t`$, the model takes the tokens so far, $`\{y\}_{<t}`$, and outputs a new token $`\hat{y}_t`$. That token is then fed back in as input to predict $`\hat{y}_{t+1}`$, and so on.
+Most text generators are **autoregressive**: they predict the **next token** from the **past tokens**. At each time step $`t`$, the model takes the tokens so far, $`\{y\}_{\lt t}`$, and outputs a new token $`\hat{y}_t`$. That token is then fed back in as input to predict $`\hat{y}_{t+1}`$, and so on.
 
 ### A look at a single step
 1. The model $`f`$ with parameters $`\theta`$ computes a **score** for every token in the vocabulary, $`S \in \mathbb{R}^{V}`$:
 
 ```math
-S = f(\{y_{<t}\}, \theta)
+S = f(\{y_{\lt t}\}, \theta)
 ```
 
 2. A **softmax** turns the scores into a probability distribution $`P`$ over $`w \in V`$:
 
 ```math
-P(y_t = w \mid \{y_{<t}\}) = \frac{\exp(S_w)}{\sum_{w' \in V} \exp(S_{w'})}
+P(y_t = w \mid \{y_{\lt t}\}) = \frac{\exp(S_w)}{\sum_{w' \in V} \exp(S_{w'})}
 ```
 
 3. At inference time, a **decoding algorithm** $`g`$ selects a token from this distribution:
 
 ```math
-\hat{y}_t = g\big(P(y_t \mid \{y_{<t}\})\big)
+\hat{y}_t = g\big(P(y_t \mid \{y_{\lt t}\})\big)
 ```
 
 Running example: given *"He wanted to go to the"*, the model puts most probability on *restroom*, then *grocery*, *store*, *airport*, *pub*, ... with a long tail ending in *hospital*, *doctor*.
@@ -57,7 +57,7 @@ Running example: given *"He wanted to go to the"*, the model puts most probabili
 We train the model to minimize the **negative log-likelihood** of the next token in a training sequence:
 
 ```math
-\mathcal{L}_t = -\log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})
+\mathcal{L}_t = -\log P(y_t^{\ast} \mid \{y^{\ast}_{\lt t}\})
 ```
 
 - This is a **multi-class classification** task: each word $`w \in V`$ is a class.
@@ -65,17 +65,17 @@ We train the model to minimize the **negative log-likelihood** of the next token
 - Sum over the whole sequence (up to the `<END>` token):
 
 ```math
-\mathcal{L} = -\sum_{t=1}^{T} \log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})
+\mathcal{L} = -\sum_{t=1}^{T} \log P(y_t^{\ast} \mid \{y^{\ast}_{\lt t}\})
 ```
 
-This is **teacher forcing**: during training, the inputs at each step are always the *gold* previous tokens $`y^{\ast}_{<t}`$, never the model's own predictions.
+This is **teacher forcing**: during training, the inputs at each step are always the *gold* previous tokens $`y^{\ast}_{\lt t}`$, never the model's own predictions.
 
 <p align="center">
   <img src="images/lecture-08/teacher-forcing.png" alt="Text generation model unrolled over time: gold tokens y0* to yT-1* are the inputs at the bottom, and the targets y1* to yT* (ending in END) are at the top, with the summed negative log-likelihood loss above" width="700">
 </p>
 <p align="center"><em>Teacher forcing: every input is a gold token, shifted by one position from the gold target the model must predict.</em></p>
 
-So: **training** fits a calibrated next-token distribution with MLE. **Inference** uses a decoding algorithm $`g`$ to pick tokens from that distribution, feeding back its *own* outputs $`\hat{y}_{<t}`$.
+So: **training** fits a calibrated next-token distribution with MLE. **Inference** uses a decoding algorithm $`g`$ to pick tokens from that distribution, feeding back its *own* outputs $`\hat{y}_{\lt t}`$.
 
 ## 4. Decoding: greedy methods
 
@@ -83,7 +83,7 @@ So: **training** fits a calibrated next-token distribution with MLE. **Inference
 Pick the highest-probability token at every step:
 
 ```math
-\hat{y}_t = \arg\max_{w \in V} P(y_t = w \mid \{y\}_{<t})
+\hat{y}_t = \arg\max_{w \in V} P(y_t = w \mid \{y\}_{\lt t})
 ```
 
 For *"He wanted to go to the"*, that is always *restroom*.
@@ -130,7 +130,7 @@ Why? They **maximize the likelihood of the sequence**, and maximum-likelihood se
 Sample from the full distribution:
 
 ```math
-\hat{y}_t \sim P(y_t = w \mid \{y\}_{<t})
+\hat{y}_t \sim P(y_t = w \mid \{y\}_{\lt t})
 ```
 
 It is random, so any token can appear (e.g., *bathroom* instead of *restroom*).
@@ -161,7 +161,7 @@ P_t(y_t = w) = \frac{\exp(S_w / \tau)}{\sum_{w' \in V} \exp(S_{w'} / \tau)}
 ```
 
 - **Raise** $`\tau > 1`$: $`P_t`$ becomes more **uniform**. Output is **more diverse** (mass is spread across the vocabulary).
-- **Lower** $`\tau < 1`$: $`P_t`$ becomes more **spiky**. Output is **less diverse** (mass is concentrated on top words).
+- **Lower** $`\tau \lt  1`$: $`P_t`$ becomes more **spiky**. Output is **less diverse** (mass is concentrated on top words).
 - $`\tau \to 0`$: all mass moves to the highest-probability token, which gives **greedy decoding**.
 
 | Method | How it picks the next token | Strength | Weakness |
@@ -218,13 +218,13 @@ Training with teacher forcing leads to **exposure bias** at generation time:
 - During **training**, inputs are gold tokens from real, human-written text:
 
 ```math
-\mathcal{L}_{MLE} = -\log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})
+\mathcal{L}_{MLE} = -\log P(y_t^{\ast} \mid \{y^{\ast}_{\lt t}\})
 ```
 
 - During **generation**, inputs are the model's own previously decoded tokens:
 
 ```math
-\mathcal{L}_{dec} = -\log P(\hat{y}_t \mid \{\hat{y}_{<t}\})
+\mathcal{L}_{dec} = -\log P(\hat{y}_t \mid \{\hat{y}_{\lt t}\})
 ```
 
 The model never saw its own mistakes in training, so one bad token can lead it into unfamiliar contexts where it **loses coherence**. Models must learn to **recover from their own bad samples**, e.g. with **scheduled sampling** or **reinforcement learning**. (This is also a shortcoming of SFT alone, besides data being expensive to collect.)
@@ -243,7 +243,7 @@ Learn behaviours by rewarding the model when it shows them.
 Sample a sequence $`\hat{Y}`$ from your model, then minimize:
 
 ```math
-\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})
+\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{\lt t})
 ```
 
 - The $`\log P`$ term: *next time, increase the probability of this sampled token in the same context*, and the reward: *do it more if the reward was high*.
@@ -265,7 +265,7 @@ Sample a sequence $`\hat{Y}`$ from your model, then minimize:
 - **Use a baseline** $`b`$:
 
 ```math
-\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})
+\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{\lt t})
 ```
 
   Why? If $`R(\hat{Y}) > 0`$ always, you **never penalize a generation**. You only reinforce some more than others. Subtracting $`b`$ pushes samples that score below the baseline *down*.
@@ -285,12 +285,12 @@ RLHF with PPO and DPO is covered in Lecture 7.
 ---
 
 ## Key takeaways
-- Autoregressive generation: scores $`S = f(\{y_{<t}\}, \theta)`$, softmax to $`P`$, decoding algorithm $`g`$ picks $`\hat{y}_t`$, then repeat.
-- Training uses teacher forcing: minimize $`-\sum_t \log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})`$ with gold inputs.
+- Autoregressive generation: scores $`S = f(\{y_{\lt t}\}, \theta)`$, softmax to $`P`$, decoding algorithm $`g`$ picks $`\hat{y}_t`$, then repeat.
+- Training uses teacher forcing: minimize $`-\sum_t \log P(y_t^{\ast} \mid \{y^{\ast}_{\lt t}\})`$ with gold inputs.
 - Greedy and beam search maximize likelihood. They are good for MT and summarization but repetitive for open-ended generation.
 - Repetition reinforces itself: each repeat makes the next more likely, especially for Transformers.
 - Sampling adds diversity. Top-k cuts the long tail with a fixed $`k`$, and top-p adapts to the shape of the distribution.
-- Temperature $`\tau`$ flattens ($`\tau>1`$) or sharpens ($`\tau<1`$) the distribution. $`\tau \to 0`$ is greedy.
+- Temperature $`\tau`$ flattens ($`\tau>1`$) or sharpens ($`\tau\lt 1`$) the distribution. $`\tau \to 0`$ is greedy.
 - MLE discourages diversity, and exposure bias comes from training on gold inputs but generating from your own.
 - REINFORCE optimizes a reward on sampled outputs. Use a baseline and mix in MLE, and watch out for reward hacking.
 

@@ -66,7 +66,7 @@ A **k-th order Markov** model keeps only the last $`k`$ words:
 P(w_i \mid w_1 \dots w_{i-1}) \approx P(w_i \mid w_{i-k} \dots w_{i-1}) \quad\Rightarrow\quad P(w_1 \dots w_n) \approx \prod_i P(w_i \mid w_{i-k} \dots w_{i-1})
 ```
 
-(ignoring $`w_j`$ for $`j < 0`$).
+(ignoring $`w_j`$ for $`j \lt  0`$).
 
 This gives **n-gram models**:
 - **Unigram:** $`P(w_1, \dots, w_n) = \prod_{i=1}^n P(w_i)`$

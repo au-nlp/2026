@@ -166,7 +166,7 @@ Humans write a **demonstration** of the task requested by each instruction. Abou
 Train the model to generate the next word $`y_t^{\ast}`$ of the demonstration given the earlier demonstration words and the instruction $`x^{\ast}`$:
 
 ```math
-\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^{\ast} \mid \{y^{\ast}\}_{<t};\ \{x^{\ast}\}\right)
+\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^{\ast} \mid \{y^{\ast}\}_{\lt t};\ \{x^{\ast}\}\right)
 ```
 
 **Shortcomings of only using SFT:**
@@ -195,7 +195,7 @@ Loop: sample a response to a query, score it with the reward model, update the L
 **REINFORCE.** Given an instruction, sample a demonstration $`\hat{Y}`$ from the model and minimise
 
 ```math
-\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)
+\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{\lt t}\right)
 ```
 
 Read it as: next time, increase the probability of this sampled token in this context, and do it more if the reward is high.
@@ -205,7 +205,7 @@ Read it as: next time, increase the probability of this sampled token in this co
 - **Subtract a baseline** $`b`$:
 
 ```math
-\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)
+\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{\lt t}\right)
 ```
 
   Why? If $`R(\hat{Y}) > 0`$ always, every sampled generation has its probability pushed up, so you **never penalise a generation**. With a baseline, below-average outputs get a negative weight and are pushed down.
@@ -214,11 +214,11 @@ Read it as: next time, increase the probability of this sampled token in this co
 **PPO.** Instead of raw log-probabilities, PPO uses the log-ratio between the current policy and the base policy, and takes a minimum with a clipped term:
 
 ```math
-\mathcal{L}_{PPO} = -\min\left( R(\hat{Y}) \sum_{t=1}^{T} \log \frac{P_{curr}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})}{P_{base}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})},\ g(\epsilon, R(\hat{Y})) \right)
+\mathcal{L}_{PPO} = -\min\left( R(\hat{Y}) \sum_{t=1}^{T} \log \frac{P_{curr}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{\lt t})}{P_{base}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{\lt t})},\ g(\epsilon, R(\hat{Y})) \right)
 ```
 
 ```math
-g(\epsilon, R(\hat{Y})) = \begin{cases} (1+\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) \ge 0 \\ (1-\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) < 0 \end{cases}
+g(\epsilon, R(\hat{Y})) = \begin{cases} (1+\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) \ge 0 \\ (1-\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) \lt  0 \end{cases}
 ```
 
 How it differs from REINFORCE:
