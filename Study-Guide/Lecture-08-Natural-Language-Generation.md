@@ -44,14 +44,14 @@ Running example: given *"He wanted to go to the"*, the model puts most probabili
 ## 3. Training: maximum likelihood (teacher forcing)
 
 We train the model to minimize the **negative log-likelihood** of the next token in a training sequence:
-$$\mathcal{L}_t = -\log P(y_t^* \mid \{y^*_{<t}\})$$
+$$\mathcal{L}_t = -\log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})$$
 
 - This is a **multi-class classification** task: each word $w \in V$ is a class.
-- The label at each step is the actual word $y_t^*$ in the training text, called the **gold** or **ground-truth** token.
+- The label at each step is the actual word $y_t^{\ast}$ in the training text, called the **gold** or **ground-truth** token.
 - Sum over the whole sequence (up to the `<END>` token):
-$$\mathcal{L} = -\sum_{t=1}^{T} \log P(y_t^* \mid \{y^*_{<t}\})$$
+$$\mathcal{L} = -\sum_{t=1}^{T} \log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})$$
 
-This is **teacher forcing**: during training, the inputs at each step are always the *gold* previous tokens $y^*_{<t}$, never the model's own predictions.
+This is **teacher forcing**: during training, the inputs at each step are always the *gold* previous tokens $y^{\ast}_{<t}$, never the model's own predictions.
 
 <p align="center">
   <img src="images/lecture-08/teacher-forcing.png" alt="Text generation model unrolled over time: gold tokens y0* to yT-1* are the inputs at the bottom, and the targets y1* to yT* (ending in END) are at the top, with the summed negative log-likelihood loss above" width="700">
@@ -184,7 +184,7 @@ How can we increase the diversity of sequences seen during training?
 ### Issue #2: Exposure bias
 Training with teacher forcing leads to **exposure bias** at generation time:
 - During **training**, inputs are gold tokens from real, human-written text:
-$$\mathcal{L}_{MLE} = -\log P(y_t^* \mid \{y^*_{<t}\})$$
+$$\mathcal{L}_{MLE} = -\log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})$$
 - During **generation**, inputs are the model's own previously decoded tokens:
 $$\mathcal{L}_{dec} = -\log P(\hat{y}_t \mid \{\hat{y}_{<t}\})$$
 
@@ -202,10 +202,10 @@ Learn behaviours by rewarding the model when it shows them.
 
 ### REINFORCE
 Sample a sequence $\hat{Y}$ from your model, then minimize:
-$$\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^*\}; \{\hat{y}\}_{<t})$$
+$$\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})$$
 - The $\log P$ term: *next time, increase the probability of this sampled token in the same context*, and the reward: *do it more if the reward was high*.
 - Usually one aggregate reward is used for the whole sequence, so every token gets the same reward.
-- For instruction following: given an **instruction** $x^*$, sample a **demonstration** from the model and reward it.
+- For instruction following: given an **instruction** $x^{\ast}$, sample a **demonstration** from the model and reward it.
 
 ### Reward estimation
 - **Use your evaluation metric**: BLEU (MT), ROUGE (summarization), CIDEr and SPIDEr (image captioning).
@@ -217,7 +217,7 @@ $$\mathcal{L}_{RM} = -\log \sigma\big(R(Y_+) - R(Y_-)\big)$$
 ### Implementation tricks
 - **Start from a model pretrained with SFT.**
 - **Use a baseline** $b$:
-$$\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^*\}; \{\hat{y}\}_{<t})$$
+$$\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})$$
   Why? If $R(\hat{Y}) > 0$ always, you **never penalize a generation**. You only reinforce some more than others. Subtracting $b$ pushes samples that score below the baseline *down*.
 - **Keep encouraging coherence** by mixing in the MLE loss:
 $$\mathcal{L} = \mathcal{L}_{MLE} + \alpha\, \mathcal{L}_{RL}$$
@@ -233,7 +233,7 @@ RLHF with PPO and DPO is covered in Lecture 7.
 
 ## Key takeaways
 - Autoregressive generation: scores $S = f(\{y_{<t}\}, \theta)$, softmax to $P$, decoding algorithm $g$ picks $\hat{y}_t$, then repeat.
-- Training uses teacher forcing: minimize $-\sum_t \log P(y_t^* \mid \{y^*_{<t}\})$ with gold inputs.
+- Training uses teacher forcing: minimize $-\sum_t \log P(y_t^{\ast} \mid \{y^{\ast}_{<t}\})$ with gold inputs.
 - Greedy and beam search maximize likelihood. They are good for MT and summarization but repetitive for open-ended generation.
 - Repetition reinforces itself: each repeat makes the next more likely, especially for Transformers.
 - Sampling adds diversity. Top-k cuts the long tail with a fixed $k$, and top-p adapts to the shape of the distribution.

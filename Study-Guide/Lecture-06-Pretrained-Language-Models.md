@@ -27,17 +27,17 @@
 
 **Pretraining objective: causal language modelling** (next-word prediction). Minimise the negative log probability of the gold sequences in your dataset:
 
-$$\mathcal{L} = -\sum_{t=1}^{T} \log P\big(x_t^* \mid \{x_s^*\}_{s<t}\big)$$
+$$\mathcal{L} = -\sum_{t=1}^{T} \log P\big(x_t^{\ast} \mid \{x_s^{\ast}\}_{s<t}\big)$$
 
-The input is `[START]` $x_1^* \dots x_T^*$ and the targets are the same tokens shifted by one, ending with `[END]`.
+The input is `[START]` $x_1^{\ast} \dots x_T^{\ast}$ and the targets are the same tokens shifted by one, ending with `[END]`.
 
 ## 3. Pretraining, then fine-tuning
 
 After pretraining, you use the pretrained model as the **initialisation** for training on individual task datasets. This is **fine-tuning**. You add a linear layer on top and minimise the cross-entropy of the gold label:
 
-$$\mathcal{L} = -\log P(y^* \mid X)$$
+$$\mathcal{L} = -\log P(y^{\ast} \mid X)$$
 
-The input ends with a special `[CLS]` token; its final representation goes through a **linear projection (linear classifier)** to give $P(y^* \mid X)$.
+The input ends with a special `[CLS]` token; its final representation goes through a **linear projection (linear classifier)** to give $P(y^{\ast} \mid X)$.
 
 Different tasks are handled by **formatting the input** as a token sequence, not by changing the architecture:
 
@@ -171,8 +171,8 @@ BERT also uses a **next sentence prediction (NSP)** task during pretraining; the
 
 - **RoBERTa** ("Robustly Optimised BERT"): same architecture, but a collection of training improvements, mainly **160 GB of data instead of 13 GB** and longer pretraining. It beats BERT-Large on SQuAD, MNLI and SST-2.
 - **DistilBERT:** BERT has many parameters, which need lots of storage. Train a smaller model by **distillation** over BERT's soft target probabilities, plus MLM:
-$$\mathcal{L}_{distil} = -P_{BERT}\big(y_t^* \mid [\text{M}], \{y_s^*\}_{s\neq t}\big)\,\log P_{dbert}\big(y_t^* \mid [\text{M}], \{y_s^*\}_{s\neq t}\big)$$
-$$\mathcal{L}_{mlm} = -\log P_{dbert}\big(y_t^* \mid [\text{M}], \{y_s^*\}_{s\neq t}\big) \qquad \mathcal{L}_{tot} = \gamma_1\mathcal{L}_{distil} + \gamma_2\mathcal{L}_{mlm}$$
+$$\mathcal{L}_{distil} = -P_{BERT}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big)\,\log P_{dbert}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big)$$
+$$\mathcal{L}_{mlm} = -\log P_{dbert}\big(y_t^{\ast} \mid [\text{M}], \{y_s^{\ast}\}_{s\neq t}\big) \qquad \mathcal{L}_{tot} = \gamma_1\mathcal{L}_{distil} + \gamma_2\mathcal{L}_{mlm}$$
 The much smaller DistilBERT keeps ~97% of BERT's performance.
 - **ELECTRA:** BERT only learns from the 15% masked tokens, which is inefficient. ELECTRA uses a small MLM **generator** to fill in masked tokens ("the chef **ate** the meal" instead of "cooked"), and a **discriminator** (ELECTRA) that predicts for **every** token whether it is *original* or *replaced*. Learning from all tokens drastically speeds up training: it reaches a given GLUE score with far fewer pretraining FLOPs.
 

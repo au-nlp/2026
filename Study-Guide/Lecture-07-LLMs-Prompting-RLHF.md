@@ -163,9 +163,9 @@ Humans write a **demonstration** of the task requested by each instruction. Abou
 
 ### Step 1: Supervised fine-tuning (SFT)
 
-Train the model to generate the next word $y_t^*$ of the demonstration given the earlier demonstration words and the instruction $x^*$:
+Train the model to generate the next word $y_t^{\ast}$ of the demonstration given the earlier demonstration words and the instruction $x^{\ast}$:
 
-$$\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^* \mid \{y^*\}_{<t};\ \{x^*\}\right)$$
+$$\mathcal{L} = -\sum_{t=1}^{T} \log P\left(y_t^{\ast} \mid \{y^{\ast}\}_{<t};\ \{x^{\ast}\}\right)$$
 
 **Shortcomings of only using SFT:**
 - **Expensive** to collect lots of demonstration data.
@@ -190,20 +190,20 @@ Loop: sample a response to a query, score it with the reward model, update the L
 
 **REINFORCE.** Given an instruction, sample a demonstration $\hat{Y}$ from the model and minimise
 
-$$\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^*\};\ \{\hat{y}\}_{<t}\right)$$
+$$\mathcal{L}_{RL} = -R(\hat{Y}) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)$$
 
 Read it as: next time, increase the probability of this sampled token in this context, and do it more if the reward is high.
 
 **Implementation tricks:**
 - **Start from the SFT model.**
 - **Subtract a baseline** $b$:
-$$\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^*\};\ \{\hat{y}\}_{<t}\right)$$
+$$\mathcal{L}_{RL} = -\big(R(\hat{Y}) - b\big) \sum_{t=1}^{T} \log P\left(\hat{y}_t \mid \{x^{\ast}\};\ \{\hat{y}\}_{<t}\right)$$
   Why? If $R(\hat{Y}) > 0$ always, every sampled generation has its probability pushed up, so you **never penalise a generation**. With a baseline, below-average outputs get a negative weight and are pushed down.
 - **Keep encouraging coherence** by mixing in the MLE loss: $\mathcal{L} = \mathcal{L}_{MLE} + \alpha\,\mathcal{L}_{RL}$.
 
 **PPO.** Instead of raw log-probabilities, PPO uses the log-ratio between the current policy and the base policy, and takes a minimum with a clipped term:
 
-$$\mathcal{L}_{PPO} = -\min\left( R(\hat{Y}) \sum_{t=1}^{T} \log \frac{P_{curr}(\hat{y}_t \mid \{x^*\}; \{\hat{y}\}_{<t})}{P_{base}(\hat{y}_t \mid \{x^*\}; \{\hat{y}\}_{<t})},\ g(\epsilon, R(\hat{Y})) \right)$$
+$$\mathcal{L}_{PPO} = -\min\left( R(\hat{Y}) \sum_{t=1}^{T} \log \frac{P_{curr}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})}{P_{base}(\hat{y}_t \mid \{x^{\ast}\}; \{\hat{y}\}_{<t})},\ g(\epsilon, R(\hat{Y})) \right)$$
 
 $$g(\epsilon, R(\hat{Y})) = \begin{cases} (1+\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) \ge 0 \\ (1-\epsilon)\,R(\hat{Y}) & \text{if } R(\hat{Y}) < 0 \end{cases}$$
 
@@ -221,7 +221,7 @@ How it differs from REINFORCE:
 
 In RLHF a reward model learns human preferences, then RL optimises the LM against it. **DPO** skips the reward model and the RL loop: it optimises for human preferences **directly** from preference data with a maximum-likelihood-style loss:
 
-$$\mathcal{L}_{DPO} = -\log \sigma\left( \beta \log \frac{P_{curr}(Y_+ \mid x^*)}{P_{base}(Y_+ \mid x^*)} - \beta \log \frac{P_{curr}(Y_- \mid x^*)}{P_{base}(Y_- \mid x^*)} \right)$$
+$$\mathcal{L}_{DPO} = -\log \sigma\left( \beta \log \frac{P_{curr}(Y_+ \mid x^{\ast})}{P_{base}(Y_+ \mid x^{\ast})} - \beta \log \frac{P_{curr}(Y_- \mid x^{\ast})}{P_{base}(Y_- \mid x^{\ast})} \right)$$
 
 The objective pushes the ratio $P_{curr}/P_{base}$ to be higher for the preferred sample $Y_+$ than for $Y_-$. Compare it with $\mathcal{L}_{RM}$: the scaled log-ratio plays the role of the reward. DPO is **less flexible than RLHF in theory, but works well in practice**.
 
