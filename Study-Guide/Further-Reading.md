@@ -6,6 +6,8 @@ For every lecture so far, you'll find the papers, blog posts, videos and book ch
 
 You don't need to read everything. Pick what you're curious about, what you found confusing in class, or what might help your project.
 
+**Jump to lecture:** [1](#1--intro-to-nlp) · [2](#2--neural-networks-and-word-embeddings) · [3](#3--language-modeling-part-1) · [4](#4--language-modeling-part-2) · [5](#5--seq2seq-attention-and-transformers) · [6](#6--pre-trained-language-models) · [7](#7--in-context-learning-prompting-and-rlhf) · [8](#8--natural-language-generation) · [9](#9--evaluating-generation-question-answering-and-rag)
+
 ## 🧭 How to read this guide
 
 | Icon        | Meaning                                                   |
