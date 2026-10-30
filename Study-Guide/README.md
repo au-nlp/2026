@@ -3,14 +3,18 @@
 Extra material to help you revisit the course: short notes for each lecture, and a curated list of further reading.
 
 > [!IMPORTANT]
-> **These notes are not a replacement for the slides, the lectures or the exercise sessions.** They are a study aid to help you review and connect ideas, but they are condensed and leave things out. Treat the slides, lectures and exercises as the main course material, and use these notes alongside them.
+> **The lecture notes can help you prepare for the exam.** They are a study aid to help you review and connect ideas.
+>
+> **But they are not a replacement for the slides, the lecture videos or the exercises, which are still the full course material.** The notes are condensed and leave things out, so use them alongside the main material, not instead of it.
+>
+> **Further Reading is completely optional and only for your own curiosity. It is not exam preparation material.** Skip it if you don't have time or aren't interested in what lies beyond the course.
 
 ## What's in this folder
 
 | | Contents |
 | --- | --- |
 | 📝 [Lecture notes](#lecture-notes) | One set of notes per lecture: core ideas, key formulas, takeaways and self-check questions |
-| 📚 [Further Reading](Further-Reading.md) | Papers, blog posts, videos and book chapters for going deeper on each lecture's topics |
+| 📚 [Further Reading](Further-Reading.md) | **Optional, not for exam prep.** Papers, blog posts, videos and book chapters for going deeper on each lecture's topics |
 
 ## Lecture notes
 

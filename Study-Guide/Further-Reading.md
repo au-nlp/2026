@@ -2,6 +2,9 @@
 
 Lectures give you the map. This guide is for when you want to explore the territory.
 
+> [!NOTE]
+> **This list is completely optional and only for your own curiosity. It is not exam preparation material.** Skip it if you don't have time or aren't interested in what lies beyond the course. To prepare for the exam, use the slides, lecture videos, exercises and [lecture notes](README.md).
+
 For every lecture so far, you'll find the papers, blog posts, videos and book chapters that go one step deeper than the slides. Some are the original papers behind the figures you saw in class. Others are beautifully illustrated explainers. A few are papers that argue with each other, which is often where things get interesting.
 
 You don't need to read everything. Pick what you're curious about, what you found confusing in class, or what might help your project.
