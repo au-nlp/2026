@@ -121,3 +121,20 @@
   - [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)
   - [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172)
 - [Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685)
+
+## Lab session 10
+
+- [Chain-of-Thought Prompting Elicits Reasoning in Large Language Models](https://arxiv.org/abs/2201.11903)
+  - [Self-Consistency Improves Chain of Thought Reasoning in Language Models](https://arxiv.org/abs/2203.11171)
+  - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629)
+  - [Tree of Thoughts: Deliberate Problem Solving with Large Language Models](https://arxiv.org/abs/2305.10601)
+  - [Tree of Thoughts, official code (including the Game of 24)](https://github.com/princeton-nlp/tree-of-thought-llm)
+  - [Reflexion: Language Agents with Verbal Reinforcement Learning](https://arxiv.org/abs/2303.11366)
+  - [Fleet of Agents: Coordinated Problem Solving with Large Language Models](https://arxiv.org/abs/2405.06691)
+- [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)
+  - [A Visual Guide to LLM Agents](https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-llm-agents)
+  - [Tool use, Groq documentation](https://console.groq.com/docs/tool-use)
+  - [Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761)
+  - [Model Context Protocol](https://modelcontextprotocol.io)
+  - [Hugging Face Agents Course](https://huggingface.co/learn/agents-course/en/unit0/introduction)
+- [Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection](https://arxiv.org/abs/2302.12173)
