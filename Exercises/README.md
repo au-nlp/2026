@@ -138,3 +138,18 @@
   - [Model Context Protocol](https://modelcontextprotocol.io)
   - [Hugging Face Agents Course](https://huggingface.co/learn/agents-course/en/unit0/introduction)
 - [Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection](https://arxiv.org/abs/2302.12173)
+
+## Lab session 11
+
+- [Agentic Design Patterns](https://aman.ai/primers/agentic-design-patterns/)
+  - [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)
+  - [Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651)
+- [Interpreting GPT: the logit lens](https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens)
+  - [Probing Classifiers: Promises, Shortcomings, and Advances](https://arxiv.org/abs/2102.12452)
+  - [How to use and interpret activation patching](https://arxiv.org/abs/2404.15255)
+  - [Interpretability in the Wild: a Circuit for Indirect Object Identification in GPT-2 small](https://arxiv.org/abs/2211.00593)
+  - [Measuring Faithfulness in Chain-of-Thought Reasoning](https://arxiv.org/abs/2307.13702)
+- [MASA: LLM-Driven Multi-Agent Systems for Autoformalization](https://aclanthology.org/2025.emnlp-demos.44/)
+  - [Autoformalization with Large Language Models](https://arxiv.org/abs/2205.12615)
+  - [Natural Number Game](https://adam.math.hhu.de/#/g/leanprover-community/nng4)
+  - [Mathematics in Lean](https://leanprover-community.github.io/mathematics_in_lean/)
